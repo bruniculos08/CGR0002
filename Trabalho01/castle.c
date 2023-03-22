@@ -550,6 +550,8 @@ void RenderScene(void)
 
         glutSolidCube(0.2f);
 
+        glutSolidIcosahedron();
+
     glPopMatrix();
 
     glPopMatrix();
