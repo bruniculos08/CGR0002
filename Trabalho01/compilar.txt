@@ -1,0 +1,3 @@
+gcc -c -o test.o snowman_sample.c -I"C:\MinGW\freeglut\include"
+
+gcc -o test.exe test.o -L"C:\MinGW\freeglut\lib\x64" -lfreeglut -lopengl32 -lglu32 -lglut32 -m32 -lgdi32 -lGLUT -Wl,--subsystem,windows

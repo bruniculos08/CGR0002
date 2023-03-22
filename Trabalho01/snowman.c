@@ -154,7 +154,7 @@ void RenderScene(void)
 
     glPushMatrix();
         // Bola do meio:
-        glColor3f(1.7f, 1.0f, 1.0f);
+        glColor3f(1.0f, 1.0f, 1.0f);
 
         gluSphere(Ball, 0.20f, 26, 13);
 
@@ -329,14 +329,14 @@ void RenderScene(void)
         // Obs.: note que não precisamos dar as coordenadas do objeto pois ele será criado a partir...
         // ... do ponto (0,0,0).
 
-        glColor3f(1.0f, 4.0f, 1.0f);
+        glColor3f(1.0f, 1.0f, 1.0f);
         // (?) Esta função gera os vértices da esfera:
         gluSphere(Ball, 0.15f, 26, 13);
         
         glTranslatef(0.0f, -0.10, 0.0f);
         glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
 
-        glColor3f(1.0f, 0.2f, 0.2f);
+        glColor3f(1.5f, 0.20f, 0.20f);
         // (?) Esta função gera os vértices do cilindro:
         gluCylinder(Ball, 0.13f, 0.13f, 0.04f, 26, 13);
 
@@ -383,9 +383,9 @@ void RenderScene(void)
         // Obs.: note que não precisamos dar as coordenadas do objeto pois ele será criado a partir...
         // ... do ponto (0,0,0).
 
-        glColor3f(5.0f, 4.0f, 1.0f);
+        glColor3f(0.8f, 0.0f, 0.0f);
         // (?) Esta função gera os vértices do cilindro:
-        gluCylinder(Ball, 0.05f, 0.0f, 0.2f, 26, 13);
+        gluCylinder(Ball, 0.04f, 0.0f, 0.2f, 26, 13);
 
     glPopMatrix();
 

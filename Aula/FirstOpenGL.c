@@ -583,6 +583,7 @@ void RenderScene(void)
 
     glPopMatrix();
 
+    // (?) Esta função atualiza o buffer troca a imagem que está no buffer pela nova imagem que foi renderizada:
     glutSwapBuffers();
 }
 
