@@ -160,6 +160,8 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
+        // (1.4) Note que a largura e profundidade do plano deve é igual ao dobro do que do que as torres...
+        // ... transladaram + o dobro do raio das torres:
         glScalef(l-0.08f+2*r, h/l, l-0.08f+2*r);
 
         glColor3f(0.01f, 0.8f, 0.1f);
@@ -393,6 +395,160 @@ void RenderScene(void)
         glColor3f(0.4f, 0.8f, 0.8f);
 
         gluCylinder(Ball, r, r, 0.30f, 26, 13);
+
+    glPopMatrix();
+
+    // (12) Criando teto de torre (-l/2, 0, l/2):
+    glPushMatrix();
+        
+        // (12.1) Jogando o teto exatamente acima da torre:
+        glTranslatef(0.0f, 0.30f, 0.0f);
+
+        // (12.2) Jogando teto para o canto do plano:
+        glTranslatef(-(l/2 - 0.04), 0, l/2 - 0.04);
+
+        // (12.3) Note que, como viramos o cilindro em 90 graus ele está acima do eixo xz portanto sua base...
+        // ... está em (0, 0, 0):
+        glTranslatef(0.0f, h/2, 0.0f);
+
+        // (12.4) Colocando o cilindro "em pé":
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+
+        Ball = gluNewQuadric();
+
+        glColor3f(0.4f, 0.5f, 0.8f);
+
+        gluCylinder(Ball, r, 0.0f, 0.10f, 26, 13);
+
+    glPopMatrix();
+
+    // (13) Criando teto de torre (l/2, 0, l/2):
+    glPushMatrix();
+        
+        // (13.1) Jogando o teto exatamente acima da torre:
+        glTranslatef(0.0f, 0.30f, 0.0f);
+
+        // (13.2) Jogando teto para o canto do plano:
+        glTranslatef(l/2 - 0.04, 0, l/2 - 0.04);
+
+        // (13.3) Note que, como viramos o cilindro em 90 graus ele está acima do eixo xz portanto sua base...
+        // ... está em (0, 0, 0):
+        glTranslatef(0.0f, h/2, 0.0f);
+
+        // (13.4) Colocando o cilindro "em pé":
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+
+        Ball = gluNewQuadric();
+
+        glColor3f(0.4f, 0.5f, 0.8f);
+
+        gluCylinder(Ball, r, 0.0f, 0.10f, 26, 13);
+
+    glPopMatrix();
+
+    // (14) Criando teto de torre (l/2, 0, l/2):
+    glPushMatrix();
+        
+        // (14.1) Jogando o teto exatamente acima da torre:
+        glTranslatef(0.0f, 0.30f, 0.0f);
+
+        // (14.2) Jogando teto para o canto do plano:
+        glTranslatef(l/2 - 0.04, 0, -(l/2 - 0.04));
+
+        // (14.3) Note que, como viramos o cilindro em 90 graus ele está acima do eixo xz portanto sua base...
+        // ... está em (0, 0, 0):
+        glTranslatef(0.0f, h/2, 0.0f);
+
+        // (14.4) Colocando o cilindro "em pé":
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+
+        Ball = gluNewQuadric();
+
+        glColor3f(0.4f, 0.5f, 0.8f);
+
+        gluCylinder(Ball, r, 0.0f, 0.10f, 26, 13);
+
+    glPopMatrix();
+
+    // (15) Criando teto de torre (l/2, 0, l/2):
+    glPushMatrix();
+        
+        // (15.1) Jogando o teto exatamente acima da torre:
+        glTranslatef(0.0f, 0.30f, 0.0f);
+
+        // (15.2) Jogando o teto para o canto do plano:
+        glTranslatef(-(l/2 - 0.04), 0, -(l/2 - 0.04));
+
+        // (15.3) Note que, como viramos o cilindro em 90 graus ele está acima do eixo xz portanto sua base...
+        // ... está em (0, 0, 0):
+        glTranslatef(0.0f, h/2, 0.0f);
+
+        // (15.4) Colocando o cilindro "em pé":
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+
+        Ball = gluNewQuadric();
+
+        glColor3f(0.4f, 0.5f, 0.8f);
+
+        gluCylinder(Ball, r, 0.0f, 0.10f, 26, 13);
+
+    glPopMatrix();
+
+    // (16) Criando tronco de árvore:
+    glPushMatrix();
+        
+        glTranslatef(-0.18f, 0.0f, 0.0f);
+        
+        glTranslatef(0.0f, h/2, 0.0f);
+
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+
+        glColor3f(0.5f, 0.2f, 0.2f);
+
+        gluCylinder(Ball, 0.05f, 0.05f, 0.4f, 26, 13);
+
+    glPopMatrix();
+
+    // (17) Criando cone de árvore (de baixo):
+    glPushMatrix();
+        
+        glTranslatef(-0.18f, 0.0f, 0.0f);
+        
+        glTranslatef(0.0f, h/2 + 0.2f, 0.0f);
+
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+
+        glColor3f(0.2f, 0.8f, 0.2f);
+
+        gluCylinder(Ball, 0.08f, 0.04f, 0.2f, 26, 13);
+
+    glPopMatrix();
+
+    // (18) Criando cone de árvore (de cima):
+    glPushMatrix();
+        
+        glTranslatef(-0.18f, 0.0f, 0.0f);
+        
+        glTranslatef(0.0f, h/2 + 0.3f, 0.0f);
+
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+
+        glColor3f(0.2f, 0.8f, 0.2f);
+
+        gluCylinder(Ball, 0.08f, 0.0f, 0.3f, 26, 13);
+
+    glPopMatrix();
+
+    // (19) Criando cubo da torre central:
+    glPushMatrix();
+        
+        glScalef(1.0f, 0.5f/0.2f, 1.0f);
+
+        glTranslatef(0.01f, h/2 + 0.1f, 0.0f);
+
+        glColor3f(0.2f, 0.8f, 0.2f);
+
+        glutSolidCube(0.2f);
 
     glPopMatrix();
 
