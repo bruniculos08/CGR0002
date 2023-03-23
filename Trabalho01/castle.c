@@ -1,6 +1,9 @@
 // Comanda para executar: gcc FirstOpenGL.c -lglut -lGL -lGLU -lm -o FirstOpenGL && ./FirstOpenGL
 #include "GL/glut.h"
 
+void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l, GLfloat height, 
+    GLfloat depth);
+
 // Variáveis que iremos utilizar para rotação:
 static GLfloat xRot = 0.0f;
 static GLfloat yRot = 0.0f;
@@ -189,7 +192,7 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.8f, 0.0f, 0.2f);
+        glColor3f(0.62,0.63,0.62);
 
         glutSolidCube(0.20f);
 
@@ -212,7 +215,7 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.8f, 0.8f, 0.2f);
+        glColor3f(0.62,0.63,0.62);
 
         glutSolidCube(0.20f);
 
@@ -235,7 +238,7 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.8f, 0.8f, 0.2f);
+        glColor3f(0.62,0.63,0.62);
 
         glutSolidCube(0.20f);
 
@@ -258,7 +261,7 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.4f, 0.8f, 0.8f);
+        glColor3f(0.62,0.63,0.62);
 
         glutSolidCube(0.20f);
 
@@ -281,7 +284,7 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.4f, 0.8f, 0.8f);
+        glColor3f(0.62,0.63,0.62);
 
         glutSolidCube(0.20f);
 
@@ -303,18 +306,18 @@ void RenderScene(void)
         // (7.4) Deixando o muro menor (comprimindo no eixo y):
         glScalef(1.0f, 0.25f, 1.0f);
 
-        // (7.5) Deixando a grossura do muro menor (comprimindo no eixo x) e aumentando o comprimento no eixo z:
+        // (7.5) Deixando a grossura do muro menor (comprimindo no eixo z) e o acertando o comprimento no eixo x:
         glScalef((l-0.08f)/(3.0f*0.20f), 1.0f, 0.1f);
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.4f, 0.8f, 0.8f);
+        glColor3f(0.62,0.63,0.62);
 
         glutSolidCube(0.20f);
 
     glPopMatrix();    
 
-    // (8) Criando a primeira torre (-l/2, 0, l/2):
+    // (8) Criando torre (-l/2, 0, l/2):
     glPushMatrix();
         
         // (8.1) Jogando a torre para o canto do plano:
@@ -329,13 +332,13 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.4f, 0.8f, 0.8f);
+        glColor3f(0.62,0.63,0.62);
 
         gluCylinder(Ball, r, r, 0.30f, 26, 13);
 
     glPopMatrix();
 
-    // (9) Criando a primeira torre (l/2, 0, l/2):
+    // (9) Criando torre (l/2, 0, l/2):
     glPushMatrix();
         
         // (9.1) Jogando a torre para o canto do plano:
@@ -350,13 +353,13 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.4f, 0.8f, 0.8f);
+        glColor3f(0.62,0.63,0.62);
 
         gluCylinder(Ball, r, r, 0.30f, 26, 13);
 
     glPopMatrix();
 
-    // (10) Criando a primeira torre (-l/2, 0, -l/2):
+    // (10) Criando torre (-l/2, 0, -l/2):
     glPushMatrix();
         
         // (10.1) Jogando a torre para o canto do plano:
@@ -371,13 +374,13 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.4f, 0.8f, 0.8f);
+        glColor3f(0.62,0.63,0.62);
 
         gluCylinder(Ball, r, r, 0.30f, 26, 13);
 
     glPopMatrix();
 
-    // (11) Criando a primeira torre (l/2, 0, -l/2):
+    // (11) Criando torre (l/2, 0, -l/2):
     glPushMatrix();
         
         // (11.1) Jogando a torre para o canto do plano:
@@ -392,7 +395,7 @@ void RenderScene(void)
 
         Ball = gluNewQuadric();
 
-        glColor3f(0.4f, 0.8f, 0.8f);
+        glColor3f(0.62,0.63,0.62);
 
         gluCylinder(Ball, r, r, 0.30f, 26, 13);
 
@@ -542,21 +545,121 @@ void RenderScene(void)
     // (19) Criando cubo da torre central:
     glPushMatrix();
         
-        glScalef(1.0f, 0.5f/0.2f, 1.0f);
+        glTranslatef(0.01f, h/2 + 0.2f*(0.8f/0.2f)/2, 0.0f);
 
-        glTranslatef(0.01f, h/2 + 0.1f, 0.0f);
+        glScalef(1.0f, 0.8f/0.2f, 1.0f);
 
-        glColor3f(0.2f, 0.8f, 0.2f);
+        glColor3f(0.01f, 0.01f, 0.01f);
 
         glutSolidCube(0.2f);
 
-        glutSolidIcosahedron();
+    glPopMatrix();
+
+    // (21) Criando apoio 1 do Sauron:
+    glPushMatrix();
+        
+        glTranslatef(0.01f + 0.1f, h/2 + 0.05f + 0.8f, 0.0f);
+
+        glScalef(0.25f, 1.0f, 0.3f);
+
+        glColor3f(0.0, 0.0, 0.0);
+
+        Ball = gluNewQuadric();
+
+        glutSolidCube(0.20f);
 
     glPopMatrix();
 
+    // (21) Criando apoio 2 do Sauron:
+    glPushMatrix();
+        
+        glTranslatef(0.01f - 0.1f, h/2 + 0.05f + 0.8f, 0.0f);
+
+        glScalef(0.25f, 1.0f, 0.3f);
+
+        glColor3f(0.0, 0.0, 0.0);
+
+        Ball = gluNewQuadric();
+
+        glutSolidCube(0.20f);
+
+    glPopMatrix();
+
+
+    // (20) Criando Sauron na torre central:
+    glPushMatrix();
+        
+        glTranslatef(0.01f, h/2 + 0.05f + 0.8f + 0.04f, 0.0f);
+
+        glScalef(2.0f, 1.0f, 0.4f);
+
+        glColor3f(0.92, 0.39, 0.04);
+
+        Ball = gluNewQuadric();
+
+        gluSphere(Ball, 0.05f, 26, 13);
+
+    glPopMatrix();
+
+    // (21) Criando cubo da torre central:
+    glPushMatrix();
+        
+        glTranslatef(0.01f, h/2 + 0.2f*(0.8f/0.2f)/2, 0.0f);
+
+        glScalef(1.0f, 0.8f/0.2f, 1.0f);
+
+        glColor3f(0.01f, 0.01f, 0.01f);
+
+        glutSolidCube(0.2f);
+
+    glPopMatrix();
+
+    // (22) Desenhado blocos de cima dos muros:
+    glColor3f(0.62,0.63,0.62);
+
+    GLfloat size = 0.1f;
+    GLfloat height = 0.05f;
+    GLfloat wallSize = 0.2f;
+    GLfloat wallDepth = 0.1f*0.2f;
+    GLfloat upOnWall = h/2 + height/2 +  wallSize;
+
+    createLittleWall(0.0f, upOnWall, l/2 - 0.04f, 0.0f, size, height, wallDepth);
+    createLittleWall(l/2 - 0.04f - r - size/2, upOnWall, l/2 - 0.04f, 0.0f, size, height, wallDepth);
+    createLittleWall(-(l/2 - 0.04f - r - size/2), upOnWall, l/2 - 0.04f, 0.0f, size, height, wallDepth);
+
+    createLittleWall(0.0f, upOnWall, -(l/2 - 0.04f), 0.0f, size, height, wallDepth);
+    createLittleWall(l/2 - 0.04f - r - size/2, upOnWall, -(l/2 - 0.04f), 0.0f, size, height, wallDepth);
+    createLittleWall(-(l/2 - 0.04f - r - size/2), upOnWall, -(l/2 - 0.04f), 0.0f, size, height, wallDepth);
+
+    createLittleWall(l/2 - 0.04f, upOnWall, 0.0f, 90.0f, size, height, wallDepth);
+    createLittleWall(l/2 - 0.04f, upOnWall, l/2 - 0.04f - r - size/2, 90.0f, size, height, wallDepth);
+    createLittleWall(l/2 - 0.04f, upOnWall, -(l/2 - 0.04f - r - size/2), 90.0f, size, height, wallDepth);
+    
+    createLittleWall(-(l/2 - 0.04f), upOnWall, 0.0f, 90.0f, size, height, wallDepth);
+    createLittleWall(-(l/2 - 0.04f), upOnWall, l/2 - 0.04f - r - size/2, 90.0f, size, height, wallDepth);
+    createLittleWall(-(l/2 - 0.04f), upOnWall, -(l/2 - 0.04f - r - size/2), 90.0f, size, height, wallDepth);
+    
     glPopMatrix();
 
     glutSwapBuffers();
+}
+
+void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l, GLfloat height, 
+    GLfloat depth){
+    
+    glPushMatrix();
+
+    glTranslatef(x, y, z);
+
+    glRotatef(theta, 0.0f, 1.0f, 0.0f);
+
+    glScalef(1.0f, height/l, depth/l);
+
+    glutSolidCube(l);
+
+    glPopMatrix();
+
+    return;
 }
 
 int main(int argc, char *argv[])
