@@ -1,13 +1,17 @@
 // Comanda para executar: gcc particle.c -lglut -lGL -lGLU -lm -o particle && ./particle
 #include "GL/glut.h"
 #include <math.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdio.h>
 
 #define _USE_MATH_DEFINES
-#define NUM_OF_PARTICLES 20
+#define NUM_OF_PARTICLES 500
 # define M_PI 3.14159265358979323846
 int window;
+
+void generateParticle();
 
 double rad(GLfloat theta);
 // Variáveis que iremos utilizar para rotação:
@@ -77,7 +81,8 @@ void SpecialKeys(int key, int x, int y)
     if (key == GLUT_KEY_UP)
         xRot += 5.0f;
     if (key == GLUT_KEY_DOWN)
-        xRot += -5.0f;
+        generateParticle();
+        // xRot += -5.0f;
     
     yRot = (GLfloat)((const int)yRot % 360);
     xRot = (GLfloat)((const int)xRot % 360);
@@ -113,26 +118,33 @@ void InitGL(int Width, int Height)
 
 particle followers[NUM_OF_PARTICLES];
 particle first_point;
-float velocity_module, velocity_random;
+float velocity_module, velocity_random_x, velocity_random_y;
 
 void generateParticle(){
     srand(time(NULL));
-    first_point.x = 0;
-    first_point.y = 0;
-    first_point.v_x = 1;
-    first_point.v_x = 1;
+    first_point.x = 4*cos(rand()) * pow(-1, rand()%100);
+    first_point.y = 4*cos(rand()) * pow(-1, rand()%100);
+    first_point.v_x = 1 * pow(-1, rand()%100);
+    first_point.v_y = 1 * pow(-1, rand()%100);
     
     for(int i = 0; i < NUM_OF_PARTICLES; i++){
-        followers[i].x = rand()%5 * pow(-1, rand()%5);
-        followers[i].y = rand()%5 * pow(-1, rand()%5);
+        followers[i].x = 2*cos(rand()) * pow(-1, rand()%100);
+        followers[i].y = 2*cos(rand()) * pow(-1, rand()%100);
+        followers[i].v_x = 0;
+        followers[i].v_y = 0;
     }
+}
+
+double dist(particle p1, particle p2){
+    double d = sqrt(pow((p1.x - p2.x),2) + pow((p1.y - p2.y),2));
+    return d;
 }
 
 GLfloat theta = 0;
 
 void RenderScene(void)
 {
-    // srand(time(NULL));
+    srand(time(NULL));
     GLUquadricObj *Ball;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
@@ -156,19 +168,48 @@ void RenderScene(void)
 
     printf("%f\n", rad(5));
 
-    theta += 5;
-    first_point.x = 2*cos(rad(theta)) + 2*sin(rad(0.25*theta));
-    first_point.y = 2*sin(rad(theta)) + 2*sin(rad(0.25*theta)); 
+    // theta += 5;
+    // first_point.x = 2*cos(rad(theta)) + 2*sin(rad(0.25*theta));
+    // first_point.y = 2*sin(rad(theta)) + 2*sin(rad(0.25*theta)); 
+
+
+    first_point.x = first_point.x + 0.1*first_point.v_x;
+    first_point.y = first_point.y + 0.1*first_point.v_y; 
+
+    if(first_point.x > 5 || first_point.x < -5){
+        first_point.v_x = - (first_point.v_x + abs((rand()%20)/20));
+        // first_point.v_y = - first_point.v_y;
+    }
+    
+    if(first_point.y > 4 || first_point.y < -4){
+        // first_point.v_x = - first_point.v_x;
+        first_point.v_y = - (first_point.v_y + abs((rand()%20)/20));
+    }
 
     for(int i = 0; i < NUM_OF_PARTICLES; i++){
+        if((followers[i].x > 6 || followers[i].x < -6) || (followers[i].y > 4 || followers[i].y < -4)){
+            if(followers[i].x > 5 || followers[i].x < -5){
+            followers[i].v_x = - (followers[i].v_x + abs((rand()%20)/20));
+            // first_point.v_y = - first_point.v_y;
+            }
+            
+            if(followers[i].y > 4 || followers[i].y < -4){
+                // first_point.v_x = - first_point.v_x;
+                followers[i].v_y = - (followers[i].v_y + abs((rand()%20)/20));
+            }
+        }
+        else if(dist(first_point, followers[i]) <= 1){
+            // vetor de velocidade unitário:
+            velocity_module = sqrt(powf((first_point.x - followers[i].x), 2) + powf((first_point.y - followers[i].y), 2));
+            velocity_random_x = 0.01;
+            velocity_random_y = 0.01;
+            followers[i].v_x = velocity_random_x*(first_point.x - followers[i].x)/velocity_module;
+            followers[i].v_y = velocity_random_y*(first_point.y - followers[i].y)/velocity_module;
+
+        }
+
         followers[i].x = followers[i].x + 1*followers[i].v_x;
         followers[i].y = followers[i].y + 1*followers[i].v_y;
-
-        // vetor de velocidade unitário:
-        velocity_module = sqrt(powf((first_point.x - followers[i].x), 2) + powf((first_point.y - followers[i].y), 2));
-        velocity_random = (rand()%10)/10 + 0.1;
-        followers[i].v_x = velocity_random*(first_point.x - followers[i].x)/velocity_module;
-        followers[i].v_y = velocity_random*(first_point.y - followers[i].y)/velocity_module;
 
         glVertex3f(followers[i].x, followers[i].y, -6.0f);
     }
