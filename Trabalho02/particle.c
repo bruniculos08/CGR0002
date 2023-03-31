@@ -128,8 +128,8 @@ void generateParticle(){
     first_point.v_y = 1 * pow(-1, rand()%100);
     
     for(int i = 0; i < NUM_OF_PARTICLES; i++){
-        followers[i].x = 2*cos(rand()) * pow(-1, rand()%100);
-        followers[i].y = 2*cos(rand()) * pow(-1, rand()%100);
+        followers[i].x = 1*cos(rand()) * pow(-1, rand()%100);
+        followers[i].y = 1*cos(rand()) * pow(-1, rand()%100);
         followers[i].v_x = 0;
         followers[i].v_y = 0;
     }
@@ -159,12 +159,12 @@ void RenderScene(void)
 
     // glutSolidCube(0.2f);
 
-    glPointSize(4.0);
+    glPointSize(3.0);
     glBegin(GL_POINTS);
 
     glColor3f(1, 1, 1);
     glVertex3f(first_point.x, first_point.y, -6.0f);
-    glColor3f(0.5, 0.5, 1); 
+    glColor3f(0.2, 0.8, 1); 
 
     printf("%f\n", rad(5));
 
@@ -198,12 +198,12 @@ void RenderScene(void)
                 followers[i].v_y = - (followers[i].v_y + abs((rand()%20)/20));
             }
         }
-        else if(dist(first_point, followers[i]) <= 1){
+        else if(dist(first_point, followers[i]) <= 2){
             // vetor de velocidade unitário:
             velocity_module = sqrt(powf((first_point.x - followers[i].x), 2) + powf((first_point.y - followers[i].y), 2));
             velocity_random_x = 0.01;
             velocity_random_y = 0.01;
-            followers[i].v_x = velocity_random_x*(first_point.x - followers[i].x)/velocity_module;
+            followers[i].v_x = -velocity_random_x*(first_point.x - followers[i].x)/velocity_module;
             followers[i].v_y = velocity_random_y*(first_point.y - followers[i].y)/velocity_module;
 
         }
