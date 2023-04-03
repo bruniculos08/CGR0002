@@ -13,10 +13,12 @@
 
 void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l, GLfloat height, 
     GLfloat depth);
-
+void generateParticle();
+double rad(GLfloat theta);
 double rad(GLfloat theta){
     return ((double) fmod(theta, 360))*M_PI/180;
 }
+
 
 // Variáveis que iremos utilizar para rotação:
 static GLfloat xRot = 0.0f;
@@ -24,20 +26,14 @@ static GLfloat yRot = 0.0f;
 static GLfloat zRot = 0.0f;
 
 typedef struct Particle{
-    GLfloat x, y, z, v_x, v_y, v_z;
+    GLfloat x, y, z, v_x, v_y, v_z, a, b, c;
     unsigned int lifetime;
 } particle;
 
 #define NUM_OF_PARTICLES 80000
 #define LIFE_TIME 100
-#define NUM_OF_SMOKE 80000
-#define SMOKE_TIME 500
 
-void generateParticle();
-double rad(GLfloat theta);
-
-void ChangeSize(int w, int h)
-{
+void ChangeSize(int w, int h){
     // (1) Essa é a variável que será utlizada para armazer o aspect ratio (razão largura/altura) da...
     // ... tela:
     GLfloat fAspect;
@@ -83,8 +79,7 @@ void ChangeSize(int w, int h)
     glLoadIdentity();
 }
 
-void SpecialKeys(int key, int x, int y)
-{
+void SpecialKeys(int key, int x, int y){
     // (1) O seguinte corpo da função é auto-explicativo:
     if (key == GLUT_KEY_LEFT)
         yRot -= 5.0f;
@@ -103,8 +98,7 @@ void SpecialKeys(int key, int x, int y)
     glutPostRedisplay();
 }
 
-void SetupRC()
-{
+void SetupRC(){
 
     // (1) Este vetor define a intensidade RGBA da luz do ambiente:
     GLfloat whiteLight[] = {0.05f, 0.05f, 0.05f, 1.0f};
@@ -165,16 +159,14 @@ void SetupRC()
 }
 
 particle lava[NUM_OF_PARTICLES];
-GLfloat init_x = 0, init_y = 0, init_z = 0, max_init_speed = 0.0015, max_y_init_speed = 0.0002, gravity = -0.0005; 
-
-particle smoke[NUM_OF_SMOKE];
-GLfloat init_smoke_x = 0, init_smoke_y = -0.1, init_smoke_z = 0, max_init_smoke_speed = 0.002,
-max_y_init_smoke_speed = 0.4, h_max = 2, slowing_smoke; 
+GLfloat init_x = 0, init_y = 0, init_z = 0, t_delta = 0.1; 
 
 // Iremos considerar que todas as particulas terão roda dada por um vetor da forma do...
-// ... vetor paramétrico v = (at, -b(t-p)² + h, ct) assim teremos uma rota a qual podemos alterar facilmente...
+// ... vetor paramétrico s = (at, -b(t-p)² + h, ct) assim teremos uma rota a qual podemos alterar facilmente...
 // ... por meio das constantes a, b, c e h, em que a e c determinam a direção no plano xz, b o formato...
 // ... da parábola percorrida, h a altura da parábola e p o pico da mesma.
+
+// Usaremos como velocidade a derivada do vetor acima, aplicada ao ponto em que o objeto se encontra.
 
 // Obs.: a ideia acima era boa porém também podemos fazer isto de maneira mais simples com vetores simples...
 // ... decrementando a coordenada y (para que o objeto caia).
@@ -250,22 +242,30 @@ void moveSmoke(){
     glEnd();
 }
 
+void parametricEq(GLfloat *v_x, GLfloat *v_y, GLfloat *v_z){
+    // s = (at, -b(t-p)² + h, ct), então:
+    // ds/dt = (a, -2b(t-p), c*t), faremos t variar em 0.1 por segundo, mas note que, não iremos usar a derivada, e...
+    // ...sim o vetor tangente:
+    // v = s(t0) + ds(t0)/dt * (t1-t0)
+    GLfloat t1 = ; 
+    *v_x = 
+
+}
+
 void generateParticle(){
-    // srand(time(NULL));
 
     for(int i = 0; i < NUM_OF_PARTICLES; i++){
         lava[i].x = init_x;
         lava[i].z = init_z;
         lava[i].y = init_y;
 
-        double random_arg;
+        lava[i].a = rand()%max_init_speed;
+        lava[i].b = rand()%max_init_speed;
+        lava[i].c = rand()%max_init_speed;
 
-        random_arg = (double) rand();
-        lava[i].v_x = (GLfloat) max_init_speed*powf(cos(rad(1.5*random_arg)), 2)*powf(-1, (GLfloat) rand());
-        random_arg = (double) rand();      
-        lava[i].v_z = (GLfloat) max_init_speed*powf(sin(rad(1.5*random_arg)), 2)*powf(-1, (GLfloat) rand());  
-        random_arg = (double) rand();      
-        lava[i].v_y = (GLfloat) max_y_init_speed*fabs(tan(fmod(rad(random_arg), (M_PI/2)) ));
+        lava[i].v_x = ;
+        lava[i].v_z = ;  
+        lava[i].v_y = ;
 
         lava[i].lifetime = LIFE_TIME;   
    }
@@ -279,13 +279,9 @@ void regenerateParticle(int i){
 
     double random_arg;
 
-    random_arg = (double) rand();
-    lava[i].v_x = (GLfloat) max_init_speed*cos(rad(1.5*random_arg))*powf(-1, (GLfloat) rand()); 
-    random_arg = (double) rand();
-    lava[i].v_z = (GLfloat) max_init_speed*sin(rad(1.5*random_arg))*powf(-1, (GLfloat) rand());        
-    random_arg = (double) rand();
-    lava[i].v_y = (GLfloat) max_y_init_speed*fabs(tan(fmod(rad(random_arg), (M_PI/2)) ));
-    // lava[i].v_y = (GLfloat) max_y_init_speed*fabs(sin(rad(random_arg)));
+    // lava[i].v_x = (GLfloat) max_init_speed*cos(rad(1.5*random_arg))*powf(-1, (GLfloat) rand()); 
+    // lava[i].v_z = (GLfloat) max_init_speed*sin(rad(1.5*random_arg))*powf(-1, (GLfloat) rand());        
+    // lava[i].v_y = (GLfloat) max_y_init_speed*fabs(tan(fmod(rad(random_arg), (M_PI/2)) ));
     lava[i].lifetime = LIFE_TIME;    
 }
 
