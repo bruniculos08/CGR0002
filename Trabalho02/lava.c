@@ -11,12 +11,6 @@
 # define M_PI 3.14159265358979323846
 
 
-void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l, GLfloat height, 
-    GLfloat depth);
-
-double rad(GLfloat theta){
-    return ((double) fmod(theta, 360))*M_PI/180;
-}
 
 // Variáveis que iremos utilizar para rotação:
 static GLfloat xRot = 0.0f;
@@ -28,6 +22,13 @@ typedef struct Particle{
     unsigned int lifetime;
 } particle;
 
+void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l, GLfloat height, 
+    GLfloat depth);
+
+double rad(GLfloat theta){
+    return ((double) fmod(theta, 360))*M_PI/180;
+}
+
 #define NUM_OF_PARTICLES 80000
 #define LIFE_TIME 100
 #define NUM_OF_SMOKE 80000
@@ -35,6 +36,18 @@ typedef struct Particle{
 
 void generateParticle();
 double rad(GLfloat theta);
+GLfloat random_float(GLfloat max_value);
+GLfloat random_direction();
+
+GLfloat random_direction(){
+    int r = rand()%2;
+    if(r == 0) return 1.0f;
+    return -1.0f;
+}
+
+GLfloat random_float(GLfloat max_value){
+    return ((GLfloat)rand()/(GLfloat)RAND_MAX) * max_value;
+}
 
 void ChangeSize(int w, int h)
 {
@@ -167,6 +180,7 @@ void SetupRC()
 particle lava[NUM_OF_PARTICLES];
 GLfloat init_x = 0, init_y = 0, init_z = 0, max_init_speed = 0.0015, max_y_init_speed = 0.0002, gravity = -0.0005; 
 
+
 particle smoke[NUM_OF_SMOKE];
 GLfloat init_smoke_x = 0, init_smoke_y = -0.1, init_smoke_z = 0, max_init_smoke_speed = 0.002,
 max_y_init_smoke_speed = 0.4, h_max = 2, slowing_smoke; 
@@ -190,16 +204,18 @@ void generateSmoke(){
         smoke[i].x = init_smoke_x;
         smoke[i].z = init_smoke_z;
         smoke[i].y = init_smoke_y;
+
         double random_arg = (double) rand();
-        smoke[i].v_x = (GLfloat) max_init_smoke_speed*cos(rad(random_arg))*powf(-1, rand());        
-        smoke[i].v_z = (GLfloat) max_init_smoke_speed*sin(rad(random_arg))*powf(-1, rand());        
+
+        smoke[i].v_x = (GLfloat) max_init_smoke_speed*cos(rad(random_arg));        
+        smoke[i].v_z = (GLfloat) max_init_smoke_speed*sin(rad(random_arg));        
         smoke[i].v_y = (GLfloat) max_y_init_smoke_speed * fabs(cos(rad(random_arg)));
+
         smoke[i].lifetime = SMOKE_TIME;   
    }
 }
 
 void regenerateSmoke(int i){
-    // srand(time(NULL));
 
     smoke[i].x = init_smoke_x;
     smoke[i].z = init_smoke_z;
@@ -207,9 +223,13 @@ void regenerateSmoke(int i){
     
     double random_arg = (double) rand();
     
-    smoke[i].v_x = (GLfloat) max_init_smoke_speed*cos(rad(random_arg))*powf(-1, rand());        
-    smoke[i].v_z = (GLfloat) max_init_smoke_speed*sin(rad(random_arg))*powf(-1, rand());        
-    smoke[i].v_y = (GLfloat) max_y_init_smoke_speed * fabs(sin(rad(random_arg)));
+    smoke[i].v_x = (GLfloat) max_init_smoke_speed*cos(rad(random_arg));        
+    smoke[i].v_z = (GLfloat) max_init_smoke_speed*sin(rad(random_arg));        
+    smoke[i].v_y = random_float(max_y_init_smoke_speed); 
+
+    // Efeito de gomas de fumaça separadas:
+    // smoke[i].v_y = (GLfloat) max_y_init_smoke_speed * fabs(sin(rad(random_arg)));
+
     smoke[i].lifetime = SMOKE_TIME;    
 }
 
@@ -219,7 +239,6 @@ void moveSmoke(){
     // GLfloat gravity = -0.001; /*Escala menor*/ 
     GLfloat ground = -0.5;
     
-    // glColor3f(1, 1, 1);
     glPointSize(2.0);
     glBegin(GL_POINTS);
 
@@ -232,11 +251,11 @@ void moveSmoke(){
             smoke[i].x = smoke[i].x + smoke[i].v_x;
             smoke[i].z = smoke[i].z + smoke[i].v_z;
             smoke[i].y = smoke[i].y + smoke[i].v_y;
-            // smoke[i].v_x = smoke[i].v_x*cos(rad(random_arg))*slower;        
-            // smoke[i].v_z = smoke[i].v_z*sin(rad(random_arg))*slower; 
+             
             smoke[i].v_x = cos(rad(random_arg))*smoke[i].y/100;        
             smoke[i].v_z = sin(rad(random_arg))*smoke[i].y/100;        
             smoke[i].v_y = maxf(smoke[i].v_y/1.2, 0.001);
+            
             smoke[i].lifetime--;    
 
             if(smoke[i].lifetime <= 0 || smoke[i].y > h_max) regenerateSmoke(i);
@@ -251,21 +270,19 @@ void moveSmoke(){
 }
 
 void generateParticle(){
-    // srand(time(NULL));
 
     for(int i = 0; i < NUM_OF_PARTICLES; i++){
         lava[i].x = init_x;
         lava[i].z = init_z;
         lava[i].y = init_y;
 
-        double random_arg;
+        double random_arg = (double) rand();
 
-        random_arg = (double) rand();
-        lava[i].v_x = (GLfloat) max_init_speed*powf(cos(rad(1.5*random_arg)), 2)*powf(-1, (GLfloat) rand());
-        random_arg = (double) rand();      
-        lava[i].v_z = (GLfloat) max_init_speed*powf(sin(rad(1.5*random_arg)), 2)*powf(-1, (GLfloat) rand());  
-        random_arg = (double) rand();      
-        lava[i].v_y = (GLfloat) max_y_init_speed*fabs(tan(fmod(rad(random_arg), (M_PI/2)) ));
+        lava[i].v_x = random_float(max_init_speed)*random_direction();
+        lava[i].v_z = random_float(max_init_speed)*random_direction();  
+        // lava[i].v_y = random_float(max_y_init_speed); 
+
+        lava[i].v_y = (GLfloat) max_y_init_speed*fabs(tan(fmod(rad(random_arg), (M_PI/2))));
 
         lava[i].lifetime = LIFE_TIME;   
    }
@@ -277,23 +294,18 @@ void regenerateParticle(int i){
     lava[i].z = init_z;
     lava[i].y = init_y;
 
-    double random_arg;
+    double random_arg = (double) rand();
+    
+    lava[i].v_x = random_float(max_init_speed)*random_direction();
+    lava[i].v_z = random_float(max_init_speed)*random_direction();  
+    // lava[i].v_y = random_float(max_y_init_speed); 
 
-    random_arg = (double) rand();
-    lava[i].v_x = (GLfloat) max_init_speed*cos(rad(1.5*random_arg))*powf(-1, (GLfloat) rand()); 
-    random_arg = (double) rand();
-    lava[i].v_z = (GLfloat) max_init_speed*sin(rad(1.5*random_arg))*powf(-1, (GLfloat) rand());        
-    random_arg = (double) rand();
-    lava[i].v_y = (GLfloat) max_y_init_speed*fabs(tan(fmod(rad(random_arg), (M_PI/2)) ));
-    // lava[i].v_y = (GLfloat) max_y_init_speed*fabs(sin(rad(random_arg)));
+    lava[i].v_y = (GLfloat) max_y_init_speed*fabs(tan(fmod(rad(random_arg), (M_PI/2))));
     lava[i].lifetime = LIFE_TIME;    
 }
 
 void moveParticles(){
-    // Mover e desenhar as particulas:
-    // GLfloat slower = -1;
     GLfloat ground = -0.5;
-    
     glPointSize(2.0);
     glBegin(GL_POINTS);
 
@@ -303,9 +315,6 @@ void moveParticles(){
                 lava[i].x = lava[i].x + lava[i].v_x;
                 lava[i].z = lava[i].z + lava[i].v_z;
                 lava[i].y = maxf(lava[i].y + lava[i].v_y, ground);
-                // lava[i].y = lava[i].y + lava[i].v_y;
-                // lava[i].v_x += slower;        
-                // lava[i].v_z += slower;        
                 lava[i].v_y += gravity;        
             }
             else{
@@ -313,15 +322,13 @@ void moveParticles(){
                 lava[i].v_z = 0;        
                 lava[i].v_y = 0;
                 lava[i].lifetime -= 1;
-                // regenerateParticle(i);
             }
 
 
             if(lava[i].lifetime <= 0) regenerateParticle(i);
             
             GLfloat dist_center = sqrt(powf(lava[i].x, 2) + powf(lava[i].z, 2));
-            glColor3f(1,  + 0.1 + fmod(5*dist_center, 1.1), 0.1);        
-            // glColor3f(2,  1.2, 0.1);        
+            glColor3f(1,  + 0.1 + fmod(5*dist_center, 1.1), 0.1);     
             glVertex3f(lava[i].x, lava[i].y, lava[i].z - 0.0f);
 
         }

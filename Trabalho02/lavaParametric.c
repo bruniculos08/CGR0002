@@ -1,4 +1,4 @@
-// Comanda para executar: gcc lava.c -lglut -lGL -lGLU -lm -o lava && ./lava
+// Comanda para executar: gcc lavaParametric.c -lglut -lGL -lGLU -lm -o lavaParametric && ./lavaParametric
 #include "GL/glut.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -15,10 +15,22 @@ void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l,
     GLfloat depth);
 void generateParticle();
 double rad(GLfloat theta);
+GLfloat random_float(GLfloat max_value);
+GLfloat random_direction();
+
 double rad(GLfloat theta){
     return ((double) fmod(theta, 360))*M_PI/180;
 }
 
+GLfloat random_direction(){
+    int r = rand()%2;
+    if(r == 0) return 1.0f;
+    return -1.0f;
+}
+
+GLfloat random_float(GLfloat max_value){
+    return ((GLfloat)rand()/(GLfloat)RAND_MAX) * max_value;
+}
 
 // Variáveis que iremos utilizar para rotação:
 static GLfloat xRot = 0.0f;
@@ -31,8 +43,8 @@ typedef struct Particle{
     unsigned int lifetime;
 } particle;
 
-#define NUM_OF_PARTICLES 80000
-#define LIFE_TIME 100
+#define NUM_OF_PARTICLES 1000
+#define LIFE_TIME 10
 
 void ChangeSize(int w, int h){
     // (1) Essa é a variável que será utlizada para armazer o aspect ratio (razão largura/altura) da...
@@ -160,8 +172,10 @@ void SetupRC(){
 }
 
 particle lava[NUM_OF_PARTICLES];
-GLfloat init_x = 0, init_y = 0, init_z = 0, t_delta = 0.01;
-GLfloat max_p = 0.05, max_h = 1, max_coeff = 0.5, ground = -0.5;
+GLfloat init_x = 0, init_y = 0, init_z = 0, t_delta = 0.3;
+GLfloat min_p = 0.04, max_p = 0.05, min_h = 0.00001, max_h = 0.0002, min_coeff = 0.005, max_coeff = 0.015, ground = -0.5;
+
+int sleep_time = 20000;
 
 // Iremos considerar que todas as particulas terão roda dada por um vetor da forma do...
 // ... vetor paramétrico s = (at, -b(t-p)² + h, ct) assim teremos uma rota a qual podemos alterar facilmente...
@@ -178,82 +192,81 @@ GLfloat maxf(GLfloat a, GLfloat b){
     else return b;
 }
 
-void parametricEq(particle *item){
+void parametricEq(int i){
     // A equação da trajetória é s(t) = (at, -b(t-p)² + h, ct), então ds/dt = (a, -2b(t-p), c*t), e portanto...
     // ... faremos t variar em 0.1 por segundo, e note que ao somarmos a taxa de variação as coordenadas teremos...
     // ... o vetor tangente (é o que estaremos "simulando"): v(t) = s(t0) + ds(t0)/dt * (t1-t0) 
-    GLfloat t0 = (*item).t0, a = (*item).a, b = (*item).b, c = (*item).c, p = (*item).p, h = (*item).h;
-    (*item).v_x = a*(t_delta);
-    (*item).v_y = - 2*b*(t0-p)*(t_delta);
-    (*item).v_z = c*(t_delta);
-    (*item).t0 += t_delta;
-    printf("a = %lf\n", (*item).a);
-    printf("t_delta = %lf\n", t_delta);
-    // printf("vx = %d\n", item->v_x);
+    GLfloat t0 = lava[i].t0, a = lava[i].a, b = lava[i].b, c = lava[i].c, p = lava[i].p, h = lava[i].h;
+    lava[i].v_x = a*t_delta;
+    lava[i].v_y = - 2*b*(t0-p)*t_delta;
+    lava[i].v_z = c*t_delta;
+    lava[i].t0 += t_delta;
 }
 
 void generateParticle(){
 
     for(int i = 0; i < NUM_OF_PARTICLES; i++){
+
+        lava[i].t0 = 0;
+        lava[i].a = (min_coeff + random_float(max_coeff))*random_direction();
+        lava[i].c = (min_coeff + random_float(max_coeff))*random_direction();
+        lava[i].p = min_p + random_float(max_p);
+        lava[i].h = min_h + random_float(max_h);
+
+        lava[i].b = lava[i].h/powf(lava[i].p, 2.0);
+
         lava[i].x = init_x;
         lava[i].z = init_z;
         lava[i].y = init_y;
-
-        lava[i].t0 = 0;
-        lava[i].a = fmod((float) rand(), max_coeff);
-        lava[i].b = fmod((float) rand(), max_coeff);
-        lava[i].c = fmod((float) rand(), max_coeff);
-        lava[i].p = fmod((float) rand(), max_coeff);
-        lava[i].h = fmod((float) rand(), max_coeff);
 
         lava[i].lifetime = LIFE_TIME;   
    }
 }
 
 void regenerateParticle(int i){
+    
+    lava[i].t0 = 0;
+    lava[i].a = (min_coeff + random_float(max_coeff))*random_direction();
+    lava[i].c = (min_coeff + random_float(max_coeff))*random_direction();
+    lava[i].p = min_p + random_float(max_p);
+    lava[i].h = min_h + random_float(max_h);
+
+    lava[i].b = lava[i].h/powf(lava[i].p, 2.0);
 
     lava[i].x = init_x;
     lava[i].z = init_z;
     lava[i].y = init_y;
-    
-    lava[i].t0 = 0;
-    lava[i].a = fmod((float) rand(), max_coeff);
-    lava[i].b = fmod((float) rand(), max_coeff);
-    lava[i].c = fmod((float) rand(), max_coeff);
-    lava[i].p = fmod((float) rand(), max_coeff);
-    lava[i].h = fmod((float) rand(), max_coeff);
 
     lava[i].lifetime = LIFE_TIME;      
 }
 
 void moveParticles(){
-    glPointSize(5.0);
+    glPointSize(3.0);
     glBegin(GL_POINTS);
+    GLfloat magnitude;
 
-        for(int i = 0; i < NUM_OF_PARTICLES; i++){
-
-            if(lava[i].y > ground){
-                parametricEq(&lava[i]);
-                lava[i].x += lava[i].v_x; 
-                lava[i].y += lava[i].v_y; 
-                lava[i].z += lava[i].v_z; 
-                // lava[i].x += 0.01; 
-                // lava[i].y += -0.01; 
-                // lava[i].z += 0.01; 
-            }
-            else{
-                lava[i].v_x = 0; 
-                lava[i].v_y = 0; 
-                lava[i].v_z = 0;
-                lava[i].y = ground;
-                // lava[i].lifetime--;
-            }
-
-            // if(lava[i].lifetime <= 0) regenerateParticle(i);
+    for(int i = 0; i < NUM_OF_PARTICLES; i++){
+        parametricEq(i);
+        if(lava[i].y > ground){
+            // magnitude = sqrt(pow(lava[i].v_x, 2) + pow(lava[i].v_y, 2) + pow(lava[i].v_z, 2));
+            magnitude = 1;
+            lava[i].x += t_delta*lava[i].v_x/magnitude; 
+            lava[i].y += t_delta*lava[i].v_y/magnitude; 
+            lava[i].z += t_delta*lava[i].v_z/magnitude; 
+        }
+        
+        if(lava[i].y <= ground){
+            lava[i].v_x = 0; 
+            lava[i].v_y = 0; 
+            lava[i].v_z = 0;
+            lava[i].y = ground;
+            lava[i].lifetime--;
+        }
+            if(lava[i].lifetime <= 0) regenerateParticle(i);
             GLfloat dist_center = sqrt(powf(lava[i].x, 2) + powf(lava[i].z, 2));
             glColor3f(1,   0.1 + fmod(5*dist_center, 1.1), 0.1);
             glVertex3f(lava[i].x, lava[i].y, lava[i].z);
-        }
+    }
     glEnd();
 }
 
@@ -298,7 +311,7 @@ void RenderScene(void)
 
     glutSwapBuffers();
 
-    usleep(20000);
+    usleep(sleep_time);
 }
 
 void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l, GLfloat height, 
