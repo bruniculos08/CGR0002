@@ -12,8 +12,10 @@
 int window;
 
 void generateParticle();
-
 double rad(GLfloat theta);
+GLfloat random_float(GLfloat max_value);
+GLfloat random_direction();
+
 // Variáveis que iremos utilizar para rotação:
 static GLfloat xRot = 0.0f;
 static GLfloat yRot = 0.0f;
@@ -23,6 +25,16 @@ typedef struct Particle{
     GLfloat x, y, v_x, v_y;
     unsigned int lifetime_seconds;
 } particle;
+
+GLfloat random_direction(){
+    int r = rand()%2;
+    if(r == 0) return 1.0f;
+    return -1.0f;
+}
+
+GLfloat random_float(GLfloat max_value){
+    return ((GLfloat)rand()/(GLfloat)RAND_MAX) * max_value;
+}
 
 void ChangeSize(int w, int h)
 {
@@ -118,18 +130,20 @@ void InitGL(int Width, int Height)
 
 particle followers[NUM_OF_PARTICLES];
 particle first_point;
-float velocity_module, velocity_random_x, velocity_random_y;
+float velocity_module, velocity_random_x, velocity_random_y, first_point_delta = 0.1;
+float init_coords_width = 1, init_coords_height= 1, coords_width = 5, coords_height = 4;
+
 
 void generateParticle(){
     srand(time(NULL));
-    first_point.x = 4*cos(rand()) * pow(-1, rand()%100);
-    first_point.y = 4*cos(rand()) * pow(-1, rand()%100);
-    first_point.v_x = 1 * pow(-1, rand()%100);
-    first_point.v_y = 1 * pow(-1, rand()%100);
+    first_point.x = random_float(coords_width)*random_direction();
+    first_point.y = random_float(coords_height)*random_direction();
+    first_point.v_x = random_direction();
+    first_point.v_y = random_direction();
     
     for(int i = 0; i < NUM_OF_PARTICLES; i++){
-        followers[i].x = 1*cos(rand()) * pow(-1, rand()%100);
-        followers[i].y = 1*cos(rand()) * pow(-1, rand()%100);
+        followers[i].x = random_float(init_coords_width)*random_direction();
+        followers[i].y = random_float(init_coords_height)*random_direction();
         followers[i].v_x = 0;
         followers[i].v_y = 0;
     }
@@ -157,8 +171,6 @@ void RenderScene(void)
     glRotatef(xRot, 1, 0, 0);
     glRotatef(yRot, 0, 1, 0);
 
-    // glutSolidCube(0.2f);
-
     glPointSize(3.0);
     glBegin(GL_POINTS);
 
@@ -166,45 +178,38 @@ void RenderScene(void)
     glVertex3f(first_point.x, first_point.y, -6.0f);
     glColor3f(0.2, 0.8, 1); 
 
-    printf("%f\n", rad(5));
+    first_point.x = first_point.x + first_point_delta*first_point.v_x;
+    first_point.y = first_point.y + first_point_delta*first_point.v_y; 
 
-    // theta += 5;
-    // first_point.x = 2*cos(rad(theta)) + 2*sin(rad(0.25*theta));
-    // first_point.y = 2*sin(rad(theta)) + 2*sin(rad(0.25*theta)); 
-
-
-    first_point.x = first_point.x + 0.1*first_point.v_x;
-    first_point.y = first_point.y + 0.1*first_point.v_y; 
-
-    if(first_point.x > 5 || first_point.x < -5){
-        first_point.v_x = - (first_point.v_x + abs((rand()%20)/20));
+    if(first_point.x > coords_width || first_point.x < -coords_width){
+        first_point.v_x = - (first_point.v_x);
         // first_point.v_y = - first_point.v_y;
     }
     
-    if(first_point.y > 4 || first_point.y < -4){
+    if(first_point.y > coords_height || first_point.y < -coords_height){
         // first_point.v_x = - first_point.v_x;
-        first_point.v_y = - (first_point.v_y + abs((rand()%20)/20));
+        first_point.v_y = - (first_point.v_y);
     }
 
     for(int i = 0; i < NUM_OF_PARTICLES; i++){
-        if((followers[i].x > 6 || followers[i].x < -6) || (followers[i].y > 4 || followers[i].y < -4)){
-            if(followers[i].x > 5 || followers[i].x < -5){
-            followers[i].v_x = - (followers[i].v_x + abs((rand()%20)/20));
-            // first_point.v_y = - first_point.v_y;
+        if((followers[i].x > coords_width || followers[i].x < -coords_width) || (followers[i].y > coords_height || followers[i].y < -coords_height)){
+            
+            if(followers[i].x > coords_width || followers[i].x < -coords_width){
+                // Por que não está dando para desacelerar as particulas?
+                followers[i].v_x = - (followers[i].v_x - random_float(0));
             }
             
-            if(followers[i].y > 4 || followers[i].y < -4){
-                // first_point.v_x = - first_point.v_x;
-                followers[i].v_y = - (followers[i].v_y + abs((rand()%20)/20));
+            if(followers[i].y > coords_height || followers[i].y < -coords_height){
+                followers[i].v_y = - (followers[i].v_y - random_float(0));
             }
         }
-        else if(dist(first_point, followers[i]) <= 2){
+        else if(dist(first_point, followers[i]) <= 0.5){
             // vetor de velocidade unitário:
             velocity_module = sqrt(powf((first_point.x - followers[i].x), 2) + powf((first_point.y - followers[i].y), 2));
             velocity_random_x = 0.01;
             velocity_random_y = 0.01;
             followers[i].v_x = -velocity_random_x*(first_point.x - followers[i].x)/velocity_module;
-            followers[i].v_y = velocity_random_y*(first_point.y - followers[i].y)/velocity_module;
+            followers[i].v_y = -velocity_random_y*(first_point.y - followers[i].y)/velocity_module;
 
         }
 
