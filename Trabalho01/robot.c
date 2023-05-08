@@ -1,4 +1,4 @@
-// Comanda para executar: gcc FirstOpenGL.c -lglut -lGL -lGLU -lm -o FirstOpenGL && ./FirstOpenGL
+// Comanda para executar: gcc robot.c -lglut -lGL -lGLU -lm -o robot && ./robot
 #include "GL/glut.h"
 #include <math.h>
 #define _USE_MATH_DEFINES
