@@ -1,6 +1,7 @@
 // Comanda para executar: g++ robot.cpp -lglut -lGL -lGLU -lm -o robot && ./robot
 #include "GL/glut.h"
 #include <math.h>
+#include <unistd.h>
 #define _USE_MATH_DEFINES
 # define M_PI 3.14159265358979323846
 
@@ -320,6 +321,10 @@ void DrawArms(){
     // Braço direito (na orientação do robô):
     glPushMatrix();
         
+        // glTranslatef(-(l_troncoSuperior/2 + 0.05), 
+        //             (h_troncoCompleto - 0.05) - forearm_r*(GLfloat)sin(rad(forearm_right_theta)), 
+        //             forearm_r*(GLfloat)cos(rad(forearm_right_theta)));
+                    
         glTranslatef(-(l_troncoSuperior/2 + 0.05), 
                     h_troncoCompleto - 0.05 - forearm_r*(GLfloat)sin(rad(forearm_right_theta)), 
                     forearm_r*(GLfloat)cos(rad(forearm_right_theta)));
@@ -376,22 +381,35 @@ void DrawArms(){
 int angulo_cosseno_arm_up = 0, angulo_cosseno_forarm_up = 0;
 
 // Angulô do antebraço direito levantado (o ombro é a origem):
-GLfloat forearm_right_theta_up = -90;
+GLfloat forearm_right_theta_up = 90;
 // Angulô do antebraço esquerdo levantado (o ombro é a origem):
-GLfloat forearm_left_theta_up = -90;
+GLfloat forearm_left_theta_up = 90;
 
 // Angulô do braço direito levantado (a ponta do antebraço é a origem):
 GLfloat arm_right_theta_up = 0;
 // Angulô do braço esquerdo levantado (a ponta do antebraço é a origem):
 GLfloat arm_left_theta_up = 0;
 
+// Angulô do antebraço direito inclinando pro lado (o ombro é a origem):
+GLfloat forearm_right_alpha_up = 0;
+// Angulô do antebraço esquerdo inclinando pro lado (o ombro é a origem):
+GLfloat forearm_left_alpha_up = 0;
+
+// Angulô do braço direito levantado (a ponta do antebraço é a origem):
+GLfloat arm_right_alpha_up = 0;
+// Angulô do braço esquerdo levantado (a ponta do antebraço é a origem):
+GLfloat arm_left_alpha_up = 0;
+
 void DrawUpArms(){
     
     arm_right_theta_up = arm_right_theta * abs(cos(rad(angulo_cosseno_arm_up)));
     forearm_right_theta_up = forearm_right_theta * (cos(rad(angulo_cosseno_forarm_up))) - 90 * (cos(rad(angulo_cosseno_forarm_up - 90)));
 
-    arm_left_theta_up = arm_right_theta * abs(cos(rad(angulo_cosseno_arm_up)));
-    forearm_left_theta_up = forearm_right_theta * (cos(rad(angulo_cosseno_forarm_up))) - 90 * (cos(rad(angulo_cosseno_forarm_up - 90)));
+    forearm_right_alpha_up = 45 * (cos(rad(angulo_cosseno_forarm_up - 90)));
+    forearm_left_alpha_up = -45 * (cos(rad(angulo_cosseno_forarm_up - 90)));
+
+    arm_left_theta_up = arm_left_theta * abs(cos(rad(angulo_cosseno_arm_up)));
+    forearm_left_theta_up = forearm_left_theta * (cos(rad(angulo_cosseno_forarm_up))) - 90 * (cos(rad(angulo_cosseno_forarm_up - 90)));
 
    if(angulo_cosseno_arm_up < 90 && flag_up == 1) angulo_cosseno_arm_up = (angulo_cosseno_arm_up + 1);
    else if(angulo_cosseno_arm_up > 0 && flag_up == 2) angulo_cosseno_arm_up = (angulo_cosseno_arm_up - 1);
@@ -406,6 +424,8 @@ void DrawUpArms(){
         
         glTranslatef(-(l_troncoSuperior/2 + 0.05), h_troncoCompleto - 0.05, 0);
 
+        glRotatef(forearm_right_alpha_up, 0, 0, 1);
+
         glRotatef(forearm_right_theta_up, 1, 0, 0);
 
         glScalef(1.0, 1.0, forearm_r/0.1);
@@ -418,6 +438,8 @@ void DrawUpArms(){
 
     // Braço direito (na orientação do robô):
     glPushMatrix();
+
+        glTranslatef(-forearm_r*(GLfloat)sin(rad(forearm_right_alpha_up)), -forearm_r*(1 - (GLfloat)cos(rad(forearm_right_alpha_up))), 0);
         
         glTranslatef(-(l_troncoSuperior/2 + 0.05), 
                     h_troncoCompleto - 0.05 - forearm_r*(GLfloat)sin(rad(forearm_right_theta_up)), 
@@ -442,6 +464,8 @@ void DrawUpArms(){
         
         glTranslatef(l_troncoSuperior/2 + 0.05, h_troncoCompleto - 0.05, 0);
 
+        glRotatef(forearm_left_alpha_up, 0, 0, 1);
+
         glRotatef(forearm_left_theta_up, 1, 0, 0);
 
         glScalef(1.0, 1.0, forearm_r/0.1);
@@ -454,6 +478,8 @@ void DrawUpArms(){
 
     // Braço esquerdo (na orientação do robô):
     glPushMatrix();
+
+        glTranslatef(-forearm_r*(GLfloat)sin(rad(forearm_left_alpha_up)), -forearm_r*(1 - (GLfloat)cos(rad(forearm_left_alpha_up))), 0);
         
         glTranslatef(l_troncoSuperior/2 + 0.05, 
                     h_troncoCompleto - 0.05 - forearm_r*(GLfloat)sin(rad(forearm_left_theta_up)), 
@@ -525,9 +551,9 @@ void RenderScene(void)
     if(flag_up == 0){
         DrawArms();
         arm_right_theta_up = 0;
-        forearm_right_theta_up = -90;
+        forearm_right_theta_up = -15;
         arm_left_theta_up = 0;
-        forearm_left_theta_up = -90;
+        forearm_left_theta_up = -15;
         angulo_cosseno_arm_up = 0, angulo_cosseno_forarm_up = 0;
     }
     else DrawUpArms();
@@ -535,6 +561,8 @@ void RenderScene(void)
     glPopMatrix();
 
     glutSwapBuffers();
+
+    usleep(5000);
 
     glutPostRedisplay();
 }
