@@ -1,383 +1,603 @@
-#include <GL/glut.h>
+// Comanda para executar: g++ robot.cpp -lglut -lGL -lGLU -lm -o robot && ./robot
+#include "GL/glut.h"
 #include <math.h>
-#define PI 3.14159265358979323846
-static double rotacaoBraco = 0;
-static double rotacaoCotovelo = 0;
-static double rotacaoCoxa = 0;
-static double rotacaoPerna = 0;
-// Rotation
-static GLfloat yRot = 0.0f;
+#define _USE_MATH_DEFINES
+# define M_PI 3.14159265358979323846
+
+void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l, GLfloat height, 
+    GLfloat depth);
+double rad(GLfloat theta);
+
+// Variáveis que iremos utilizar para rotação:
 static GLfloat xRot = 0.0f;
+static GLfloat yRot = 0.0f;
 static GLfloat zRot = 0.0f;
-static GLfloat zoom = -5.0;
-// Change viewing volume and viewport.  Called when window is resized
+
+int flag_up = 0;
+
+// Altura até o topo tronco superior:
+GLfloat h_troncoCompleto = 0.25 + 0.75*0.5 + 0.25;
+// largura do topo tronco superior:
+GLfloat l_troncoSuperior = 0.5;
+
 void ChangeSize(int w, int h)
 {
+    // (1) Essa é a variável que será utlizada para armazer o aspect ratio (razão largura/altura) da...
+    // ... tela:
     GLfloat fAspect;
 
-    // Prevent a divide by zero
+    // Obs.: esta condição evita que se h for passado como um valor muito próximo de 0 (pois ele então...
+    // ... seria arrendondado para 0) ocorra divisão por 0:
     if (h == 0)
         h = 1;
 
-    // Set Viewport to window dimensions
+    // (2) Esta função serve para ajustar a transformação afim das cordenadas x e y para as cordenadas...
+    // ... x e y normalizadas (cada eixo em um intervalo de -1 à 1, ou de 0 à 1):
     glViewport(0, 0, w, h);
+    // Os dois primeiros parâmetro indicam respectivamente as coordenadas x e y do canto inferior esquerdo...
+    // ... da janela, enquanto w é a largura e h é a altura da mesma.
 
     fAspect = (GLfloat)w / (GLfloat)h;
 
-    // Reset coordinate system
+    // (3) Esta função especifica qual é a que será alterada pelos comandos de translação, rotação e etc,...
+    // ... na pilha:
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    // Neste caso iremos alterar a matriz de projeção (a última a ser aplicada nos vértices na hora da rende...
+    // ...rização e é a a matriz relacionada à câmera e transformação do 3D para o 2D da tela).
 
-    // Produce the perspective projection
-    gluPerspective(35.0, fAspect, 1.0, 40.0);
+    // (4) Esta função troca a matriz atual (na pilha) pela matriz identidade ("reseta"):
+    glLoadIdentity();
+    // Note que isto é bem importante visto que sem isso as transformações se acomulariam cada vez que a cena...
+    // ... é renderizada.
+
+    // (5) Esta função configura a matriz de projeção de perspectiva (joga ela na própria pilha):
+    gluPerspective(35.0f, fAspect, 1.0, 40.0);
+    // Note que o primeiro argumento é o fovy (campo de ângulo de exibição, em graus, na direção y), o segundo...
+    // é o aspect ratio, o terceiro é o zNear (A distância do visualizador até o plano de recorte próximo, sem-
+    // ...pre positivo;  é como se fosse a distância m[inima para renderização) e o último é o zFar (A distância...
+    // ... do visualizador para o plano de recorte distante, sempre positivo; é como se fosse a distância máxi...
+    // ...ma de renderização).
+
+    // (6) Função já descrita antes:
     glMatrixMode(GL_MODELVIEW);
+    // Neste caso iremos alterar a matriz de modelo (a primeira a ser aplicada nos vértices na hora da rende...
+    // ...rização, ou seja, a matriz que é realmente utilizada para se mexer nos objetos).
+
+    // (7) Função já descrita antes:
     glLoadIdentity();
 }
 
-// This function does any needed initialization on the rendering context.  Here it sets up and initializes the lighting for the scene.
+void SpecialKeys(int key, int x, int y)
+{
+    // (1) O seguinte corpo da função é auto-explicativo:
+    if (key == GLUT_KEY_LEFT)
+        yRot -= 5.0f;
+    if (key == GLUT_KEY_RIGHT)
+        yRot += 5.0f;
+    if (key == GLUT_KEY_UP)
+        xRot += 5.0f;
+    if (key == GLUT_KEY_DOWN)
+        xRot += -5.0f;
+    
+    yRot = (GLfloat)((const int)yRot % 360);
+    xRot = (GLfloat)((const int)xRot % 360);
+
+    // (2) Marca a janela atual como precisando ser re-renderizada, para que na seguinte iteração da função...
+    // ... glutMainLoop isto ocorra:
+    glutPostRedisplay();
+}
+
+void keyboard(unsigned char key, int x, int y){
+ switch (key) {
+        case 'A':
+        case 'a':
+            flag_up = (flag_up+1)%3;
+            // forearm_left_theta = forearm_left_theta + 5.0;
+            // forearm_left_theta = (GLfloat) (((int) forearm_left_theta + 5) % 360);
+            // glutPostRedisplay();
+            break;
+        case 's':
+        case 'S':
+            // arm_left_theta = arm_left_theta + 5.0;
+            // arm_left_theta = (GLfloat) (((int) arm_left_theta + 5) % 360);
+            // glutPostRedisplay();
+            break;
+        case 'd':
+        case 'D':
+            // forearm_right_theta = forearm_right_theta + 5.0;
+            // forearm_right_theta = (GLfloat) (((int) forearm_right_theta + 5) % 360);
+            glutPostRedisplay();
+            break;
+        case 'f':
+        case 'F':
+            // arm_right_theta = arm_right_theta + 5.0;
+            // arm_right_theta = (GLfloat) (((int) arm_right_theta + 5) % 360);
+            glutPostRedisplay();
+            break;
+        default:
+            break;
+    }
+}
+
 void SetupRC()
 {
 
-    // Light values and coordinates
-    GLfloat whiteLight[] = {0.05, 0.05, 0.05, 1.0f};
-    GLfloat sourceLight[] = {0.25, 0.25, 0.25, 0.25f};
-    GLfloat lightPos[] = {-1.0, 5.0, 5.0, 1.0f};
+    // (1) Este vetor define a intensidade RGBA da luz do ambiente:
+    GLfloat whiteLight[] = {0.05f, 0.05f, 0.05f, 1.0f};
+    // (2) Este vetor define a intensidade RGBA da luz de difusão:
+    GLfloat sourceLight[] = {0.25f, 0.25f, 0.25f, 1.0f};
+    // (3) Este vetor define as coordenadas na fonte de luz em coordenadas homogêneas (por isto com 4 coordenadas):
+    GLfloat lightPos[] = {-10.f, 5.0f, 5.0f, 1.0f};
 
-    glEnable(GL_DEPTH_TEST); // Hidden surface removal
-    glFrontFace(GL_CCW);     // Counter clock-wise polygons face out
-    glEnable(GL_CULL_FACE);  // Do not calculate inside
+    // (4) Esta função ativa o buffer de teste de profundidade, que no momento da renderização verifica cada...
+    // ... item a se renderizado, vendo se não há outro item (superfície) com menor profundidade (na frente):
+    glEnable(GL_DEPTH_TEST);
 
-    // Enable lighting
+    // (5) Esta função define de qual lado cada polígo será renderizado, de modo que estando os vértices...
+    // ... ordenados no sentido horário ou anti-horário, dependendo se a direção sobre a qual a luz pode chegar...
+    // ... está no sentido escolhido, a face será renderizada ou não:
+    glFrontFace(GL_CCW);
+
+    // (6) Esta função habilidade a não renderização das que estejam com os vértices sendo "visto" no sentido...
+    // ... contrário ao escolhido:
+    glEnable(GL_CULL_FACE);
+
+    // (7) Esta função habilita a luz:
     glEnable(GL_LIGHTING);
 
-    // Setup and enable light 0
+    // (8) Esta função define os parâmetros do modelo de iluminação:
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, whiteLight);
+    // Nesse caso o  1º parâmetro indica que o 2º contém quatro valores de ponto flutuante que especificam a...
+    // ... intensidade do RGBA ambiente de toda a cena.
+
+    // (9) Esta função define parâmetros para uma determinada luz (fonte de luz):
     glLightfv(GL_LIGHT0, GL_AMBIENT, sourceLight);
+    // Nesse caso a fonte de luz é a 0 (GL_LIGHT0), e o 2º parâmetro indica que o 3º contém quatro valores de...
+    // ... ponto flutuante que especificam a intensidade do RGBA ambiente da luz.
+
+    // (10) Esta função define parâmetros para uma determinada luz (fonte de luz):
     glLightfv(GL_LIGHT0, GL_DIFFUSE, sourceLight);
+    // Nesse caso a fonte de luz é a 0 (GL_LIGHT0), e o 2º parâmetro indica que o 3º contém quatro valores de...
+    // ... ponto flutuante quatro valores que especificam a intensidade difusa do RGBA da luz.
+
+    // (11) Esta função define parâmetros para uma determinada luz (fonte de luz):
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    // Nesse caso a fonte de luz é a 0 (GL_LIGHT0), e o 2º parâmetro indica que o 3º contém quatro valores de...
+    // ... ponto flutuante quatro valores que especificam a posição da luz em coordenadas de objeto homogêneas.
+
+    // (12) Esta função habilita a luz da fonte 0:
     glEnable(GL_LIGHT0);
 
-    // Enable color tracking
+    // (13) Esta função habilita para cada material ou materiais especificados por face, o parâmetro de...
+    // ... material ou os parâmetros especificados pelo modo acompanham a cor atual o tempo todo.
     glEnable(GL_COLOR_MATERIAL);
 
-    // Set Material properties to follow glColor values
+    // (14) Define as propriedades que haverão junto a cor atual de cada objeto:
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
-    // Black blue background
-    glClearColor(0.7, 0.8, 1.0, 0.0);
+    // (15) Define a cor do fundo do espaço:
+    glClearColor(0.25f, 0.25f, 0.50f, 1.0f);
+  
 }
 
-void NormalKeys(unsigned char key, int x, int y)
-{
-    switch (key)
+GLfloat altura_tronco_superior = 0.75*0.5, lateral_quadril = 0.5 * 0.75/2 - 0.05, 
+angulo_perna_esquerda = 45, angulo_perna_direita = 45, 
+angulo_coxa_esquerda = 45, angulo_coxa_direita = 45;
 
-    {
-    case 'z':
-        zoom += .3;
-        break;
-    case 'x':
-        zoom -= .3;
-        break;
-    case 'w':
-        xRot -= 5.0f;
-        break;
-    case 's':
-        xRot += 5.0f;
-        break;
-    case 'a':
-        yRot -= 5.0f;
-        break;
-    case 'd':
-        yRot += 5.0f;
-        break;
-    case 'q':
-        zRot += 5.0f;
-        break;
-    case 'e':
-        zRot -= 5.0f;
-        break;
-    case 'r':
-        rotacaoBraco = ((int)rotacaoBraco + 5) % 360;
-        glutPostRedisplay();
-        break;
-    case 't':
-        rotacaoBraco = ((int)rotacaoBraco - 5) % 360;
-        glutPostRedisplay();
-        break;
-    case 'f':
-        rotacaoCotovelo = ((int)rotacaoCotovelo + 5) % 360;
-        glutPostRedisplay();
-        break;
-    case 'g':
-        rotacaoCotovelo = ((int)rotacaoCotovelo - 5) % 360;
-        glutPostRedisplay();
-        break;
-    case 'c':
-        rotacaoCoxa = ((int)rotacaoCoxa + 5) % 360;
-        glutPostRedisplay();
-        break;
-    case 'v':
-        rotacaoCoxa = ((int)rotacaoCoxa - 5) % 360;
-        glutPostRedisplay();
-        break;
-    case 'b':
-        rotacaoPerna = ((int)rotacaoPerna + 5) % 360;
-        glutPostRedisplay();
-        break;
-    case 'n':
-        rotacaoPerna = ((int)rotacaoPerna - 5) % 360;
-        glutPostRedisplay();
-        break;
-    }
-    yRot = (GLfloat)((const int)yRot % 360);
-    xRot = (GLfloat)((const int)xRot % 360);
-    zRot = (GLfloat)((const int)zRot % 360);
-    glutPostRedisplay();
-    // Nao quebra o aspect ratio nem nada :)
-    ChangeSize(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
-}
-void DrawHead()
-{
-    GLUquadricObj *pObj;
-    pObj = gluNewQuadric();
-    glColor3f(0.7f, 0.7f, 0.7f);
-    glPushMatrix(); // save transform matrix state
-    glTranslatef(0.0f, 1.45f, 0.0f);
-    glScalef(.8, 1.05, 1);
-    glutSolidCube(0.4);
-    glPopMatrix(); // restore transform matrix state
+int angulo_cosseno_perna = 0, angulo_cosseno_coxa = 0;
+
+
+void DrawLegs(){
+
+    angulo_perna_direita = abs(cos(rad(angulo_cosseno_perna%360))) * 50;
+    angulo_coxa_direita = cos(rad(angulo_cosseno_coxa%360)) * 40 - 10;
+
+    angulo_perna_esquerda = abs(cos(rad(angulo_cosseno_perna%360))) * 50;
+    angulo_coxa_esquerda = -cos(rad(angulo_cosseno_coxa%360)) * 40 - 10;
+
+    angulo_cosseno_perna++;
+    angulo_cosseno_coxa++;
+
+    // Perna e coxa direita (na orientação do robô):
     glPushMatrix();
-    glTranslatef(0.0f, 1.77, 0.0f);
-    glRotatef(90.0f, 1.0f, .0f, 0.0f);
-    gluCylinder(pObj, 0.02f, 0.02f, 0.15f, 26, 13);
-    glPopMatrix();
-    glPushMatrix();
-    glPushMatrix();
-    glTranslatef(0.0f, 1.77f, 0.0f);
-    gluSphere(pObj, 0.05f, 26, 13);
+
+        // (1) Coloca a face de cima da coxa encostada no tronco superior e ao lado do direito do quadril...
+        // ... (e move a perna junto):
+        glTranslatef(-lateral_quadril - 0.05, altura_tronco_superior, 0);
+
+        glRotatef(angulo_coxa_direita, 1, 0, 0);
+
+        // Coxa direita:
+        glPushMatrix();
+
+            glScalef(1.0, 5.0, 1.0);
+
+            glTranslatef(0, -0.05, 0);
+
+            glutSolidCube(0.1);
+
+        glPopMatrix();
+
+        // Perna direita:
+        glPushMatrix();
+
+            glTranslatef(0, -0.5, 0);
+
+            glRotatef(angulo_perna_direita, 1, 0, 0);
+
+            glScalef(1.0, 5.0, 1.0);
+
+            glTranslatef(0, -0.05, 0);
+
+            glutSolidCube(0.1);
+
+        glPopMatrix();
+
     glPopMatrix();
 
-    // eyes
-    glColor3f(.0f, 1.0f, .3f);
+    // Perna e coxa esquerda (na orientação do robô):
     glPushMatrix();
-    glTranslatef(-0.08f, 1.56f, 0.22f);
-    gluSphere(pObj, 0.045f, 26, 13);
-    glPopMatrix();
-    glPushMatrix();
-    glTranslatef(0.08f, 1.56f, 0.22f);
-    gluSphere(pObj, 0.045f, 26, 13);
+
+        // (1) Coloca a face de cima da coxa encostada no tronco superior e ao lado do esquerdo do quadril...
+        // ... (e move a perna junto):
+        glTranslatef(lateral_quadril + 0.05, altura_tronco_superior, 0);
+
+        glRotatef(angulo_coxa_esquerda, 1, 0, 0);
+
+        // Coxa esquerda:
+        glPushMatrix();
+
+            glScalef(1.0, 5.0, 1.0);
+
+            glTranslatef(0, -0.05, 0);
+
+            glutSolidCube(0.1);
+
+        glPopMatrix();
+
+        // Perna esquerda:
+        glPushMatrix();
+
+            glTranslatef(0, -0.5, 0);
+
+            glRotatef(angulo_perna_esquerda, 1, 0, 0);
+
+            glScalef(1.0, 5.0, 1.0);
+
+            glTranslatef(0, -0.05, 0);
+
+            glutSolidCube(0.1);
+
+        glPopMatrix();
+
     glPopMatrix();
 
-    // mouth
-    glColor3f(.0f, 0.0f, 0.0f);
+}
+
+// Tamanho dos antebraços:
+GLfloat forearm_r = 0.3;
+// Angulô do antebraço direito (o ombro é a origem):
+GLfloat forearm_right_theta = -90;
+// Angulô do antebraço esquerdo (o ombro é a origem):
+GLfloat forearm_left_theta = -90;
+
+// Tamanho dos braços:
+GLfloat arm_r = 0.2;
+// Angulô do braço direito (a ponta do antebraço é a origem):
+GLfloat arm_right_theta = -10;
+// Angulô do braço esquerdo (a ponta do antebraço é a origem):
+GLfloat arm_left_theta = -10;
+
+
+int angulo_cosseno_arm = 0, angulo_cosseno_forarm = 0;
+
+void DrawArms(){
+
+    arm_right_theta = abs(cos(rad(angulo_cosseno_arm%360))) * 50 + 40;
+    forearm_right_theta = cos(rad(angulo_cosseno_forarm%360)) * 45 + 100;
+
+    arm_left_theta = abs(cos(rad(angulo_cosseno_arm%360))) * 50 + 40;
+    forearm_left_theta = -cos(rad(angulo_cosseno_forarm%360)) * 45 + 100;
+
+    angulo_cosseno_arm++;
+    angulo_cosseno_forarm++;
+
+    // Antebraço direito (na orientação do robô):
     glPushMatrix();
-    glTranslatef(0.0, 1.45, 0.2f);
-    glScalef(0.4f, 0.08f, 0.02f);
-    glutSolidCube(0.5);
+        
+        glTranslatef(-(l_troncoSuperior/2 + 0.05), h_troncoCompleto - 0.05, 0);
+
+        glRotatef(forearm_right_theta, 1, 0, 0);
+
+        glScalef(1.0, 1.0, forearm_r/0.1);
+
+        glTranslatef(0, 0, 0.05);
+
+        glutSolidCube(0.1);
+
     glPopMatrix();
-    glColor3f(1.0f, 0.0f, 0.0f);
+
+    // Braço direito (na orientação do robô):
     glPushMatrix();
-    glTranslatef(0.05, 1.41, 0.2f);
-    glScalef(0.2f, 0.08f, 0.02f);
-    glutSolidCube(0.5);
+        
+        glTranslatef(-(l_troncoSuperior/2 + 0.05), 
+                    h_troncoCompleto - 0.05 - forearm_r*(GLfloat)sin(rad(forearm_right_theta)), 
+                    forearm_r*(GLfloat)cos(rad(forearm_right_theta)));
+
+        glRotatef(forearm_right_theta-arm_right_theta, 1, 0, 0);
+
+        glScalef(1.0, 1.0, 4.0);
+
+        glTranslatef(0, 0, 0.05);
+
+        glColor3f(2, 2, 1);
+
+        glutSolidCube(0.1);
+
     glPopMatrix();
-    glColor3f(.0f, 0.0f, 0.0f);
+
+    glColor3f(0.5, 0.5, 0.5);
+
+    // Antebraço esquerdo (na orientação do robô):
     glPushMatrix();
-    glTranslatef(-.02, 1.41, 0.2f);
-    glScalef(0.08f, 0.08f, 0.02f);
-    glutSolidCube(0.5);
+        
+        glTranslatef(l_troncoSuperior/2 + 0.05, h_troncoCompleto - 0.05, 0);
+
+        glRotatef(forearm_left_theta, 1, 0, 0);
+
+        glScalef(1.0, 1.0, forearm_r/0.1);
+
+        glTranslatef(0, 0, 0.05);
+
+        glutSolidCube(0.1);
+
+    glPopMatrix();
+
+    // Braço esquerdo (na orientação do robô):
+    glPushMatrix();
+        
+        glTranslatef(l_troncoSuperior/2 + 0.05, 
+                    h_troncoCompleto - 0.05 - forearm_r*(GLfloat)sin(rad(forearm_left_theta)), 
+                    forearm_r*(GLfloat)cos(rad(forearm_left_theta)));
+                    
+        glRotatef(forearm_left_theta-arm_left_theta, 1, 0, 0);
+
+        glScalef(1.0, 1.0, 4.0);
+
+        glTranslatef(0, 0, 0.05);
+
+        glColor3f(2, 2, 1);
+
+        glutSolidCube(0.1);
+
     glPopMatrix();
 }
-void DrawBody()
-{
-    glColor3f(0.7f, 0.7f, 0.7f);
-    glPushMatrix();
-    glTranslatef(0.0, 0.9645, 0.0f);
-    glScalef(0.8f, 1.2f, 0.8f);
-    glutSolidCube(0.5);
-    glPopMatrix();
-}
-void DrawArms()
-{
-    GLUquadricObj *ombroDireito, *ombroEsquerdo, *bracoDireito, *bracoEsquerdo, *cotoveloDireito, *cotoveloEsquerdo,*anteEsquerdo,*anteDireito,*maoEsquerda,*maoDireita;
-    ombroEsquerdo = gluNewQuadric();
-    bracoEsquerdo = gluNewQuadric();
-    cotoveloEsquerdo = gluNewQuadric();
-    anteEsquerdo = gluNewQuadric();
-    maoEsquerda = gluNewQuadric();
-    glPushMatrix();
-    glTranslatef(0.22f, 1.22f, 0.0f);
-    gluSphere(ombroEsquerdo, 0.08f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0, 0, 0.0f);
-    glRotatef(90 + rotacaoBraco, 1.0f, 0.0f, 0.0f);
-    gluCylinder(bracoEsquerdo, 0.05f, 0.05f, 0.2f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0, .0, 0.2);
-    gluSphere(cotoveloEsquerdo, 0.08f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0,0, 0);
-    glRotatef(rotacaoCotovelo-90, 1, 0, 0);
-    gluCylinder(anteEsquerdo, 0.05f, 0.05f, 0.28f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0,.0,0.28);
-    gluSphere(maoEsquerda, 0.08f, 26, 13);
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-	ombroDireito = gluNewQuadric();
-    bracoDireito = gluNewQuadric();
-    cotoveloDireito = gluNewQuadric();
-    anteDireito = gluNewQuadric();
-    maoDireita = gluNewQuadric();
-    glPushMatrix();
-    glTranslatef(-0.22f, 1.22f, 0.0f);
-    gluSphere(ombroDireito, 0.08f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0, 0, 0.0f);
-    glRotatef(90 + rotacaoBraco, 1.0f, 0.0f, 0.0f);
-    gluCylinder(bracoDireito, 0.05f, 0.05f, 0.2f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0, .0, 0.2);
-    gluSphere(cotoveloDireito, 0.08f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0,0, 0);
-    glRotatef(rotacaoCotovelo-90, 1, 0, 0);
-    gluCylinder(anteDireito, 0.05f, 0.05f, 0.28f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0,.0,0.28);
-    gluSphere(maoDireita, 0.08f, 26, 13);
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-}
-void DrawLegs()
-{
-    GLUquadricObj *coxaEsquerda, *coxaDireita, *cusetEsquerdo, *cusetDireito, *pernaEsquerda, *pernaDireita, *calcanharDireito, *calcanharEsquerdo, *joelhoEsquerdo, *joelhoDireito, *peDireito, *peEsquerdo;
-    GLUquadricObj *tampaoDireito, *tampaoEsquerdo;
-    coxaEsquerda = gluNewQuadric();
-    cusetEsquerdo = gluNewQuadric();
-    pernaEsquerda = gluNewQuadric();
-    calcanharEsquerdo = gluNewQuadric();
-    joelhoEsquerdo = gluNewQuadric();
-    peEsquerdo = gluNewQuadric();
-    tampaoEsquerdo = gluNewQuadric();
-    glPushMatrix();
-    glTranslatef(0.15f, 0.63f, 0.0f);
-    gluSphere(cusetEsquerdo, 0.08f, 26, 13);
-    glPushMatrix();
-    glRotatef(90.0 + rotacaoCoxa, 1.0f, 0.0f, 0.0f);
-    gluCylinder(coxaEsquerda, 0.05f, 0.05f, 0.28f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0,0.0,0.28);
-    gluSphere(joelhoEsquerdo, 0.08f, 26, 13);
-    glPushMatrix();
-    glRotatef(rotacaoPerna, 1.0f, 0.0f, 0.0f);
-    gluCylinder(pernaEsquerda, 0.05f, 0.05f, 0.28f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0,0.0,0.28);
-    gluSphere(calcanharEsquerdo, 0.05f, 26, 13);
-    glPushMatrix();
-    glRotatef(-90,1.0,0.0,0.0);
-    gluCylinder(peEsquerdo, 0.05f, 0.03f, 0.2f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0,0.0,.2);
-    gluSphere(tampaoEsquerdo, 0.03f, 26, 13);
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
+
+int angulo_cosseno_arm_up = 0, angulo_cosseno_forarm_up = 0;
+
+// Angulô do antebraço direito levantado (o ombro é a origem):
+GLfloat forearm_right_theta_up = -90;
+// Angulô do antebraço esquerdo levantado (o ombro é a origem):
+GLfloat forearm_left_theta_up = -90;
+
+// Angulô do braço direito levantado (a ponta do antebraço é a origem):
+GLfloat arm_right_theta_up = 0;
+// Angulô do braço esquerdo levantado (a ponta do antebraço é a origem):
+GLfloat arm_left_theta_up = 0;
+
+void DrawUpArms(){
     
-    coxaDireita = gluNewQuadric();
-    cusetDireito = gluNewQuadric();
-    pernaDireita = gluNewQuadric();
-    calcanharDireito = gluNewQuadric();
-    joelhoDireito = gluNewQuadric();
-    peDireito = gluNewQuadric();
-    tampaoDireito = gluNewQuadric();
+    arm_right_theta_up = arm_right_theta * abs(cos(rad(angulo_cosseno_arm_up)));
+    forearm_right_theta_up = forearm_right_theta * (cos(rad(angulo_cosseno_forarm_up))) - 90 * (cos(rad(angulo_cosseno_forarm_up - 90)));
+
+    arm_left_theta_up = arm_right_theta * abs(cos(rad(angulo_cosseno_arm_up)));
+    forearm_left_theta_up = forearm_right_theta * (cos(rad(angulo_cosseno_forarm_up))) - 90 * (cos(rad(angulo_cosseno_forarm_up - 90)));
+
+   if(angulo_cosseno_arm_up < 90 && flag_up == 1) angulo_cosseno_arm_up = (angulo_cosseno_arm_up + 1);
+   else if(angulo_cosseno_arm_up > 0 && flag_up == 2) angulo_cosseno_arm_up = (angulo_cosseno_arm_up - 1);
+
+    if(angulo_cosseno_forarm_up < 90 && flag_up == 1) angulo_cosseno_forarm_up = (angulo_cosseno_forarm_up + 1);
+    else if(angulo_cosseno_forarm_up > 0 && flag_up == 2) angulo_cosseno_forarm_up = (angulo_cosseno_forarm_up - 1);
+
+    if(angulo_cosseno_arm_up == 0 && angulo_cosseno_forarm_up == 0 && flag_up == 2) flag_up = 0;
+
+    // Antebraço direito (na orientação do robô):
     glPushMatrix();
-    glTranslatef(-0.15f, 0.63f, 0.0f);
-    gluSphere(cusetDireito, 0.08f, 26, 13);
+        
+        glTranslatef(-(l_troncoSuperior/2 + 0.05), h_troncoCompleto - 0.05, 0);
+
+        glRotatef(forearm_right_theta_up, 1, 0, 0);
+
+        glScalef(1.0, 1.0, forearm_r/0.1);
+
+        glTranslatef(0, 0, 0.05);
+
+        glutSolidCube(0.1);
+
+    glPopMatrix();
+
+    // Braço direito (na orientação do robô):
     glPushMatrix();
-    glRotatef(90.0 + rotacaoCoxa, 1.0f, 0.0f, 0.0f);
-    gluCylinder(coxaDireita, 0.05f, 0.05f, 0.28f, 26, 13);
+        
+        glTranslatef(-(l_troncoSuperior/2 + 0.05), 
+                    h_troncoCompleto - 0.05 - forearm_r*(GLfloat)sin(rad(forearm_right_theta_up)), 
+                    forearm_r*(GLfloat)cos(rad(forearm_right_theta_up)));
+
+        glRotatef(forearm_right_theta_up-arm_right_theta_up, 1, 0, 0);
+
+        glScalef(1.0, 1.0, 4.0);
+
+        glTranslatef(0, 0, 0.05);
+
+        glColor3f(2, 2, 1);
+
+        glutSolidCube(0.1);
+
+    glPopMatrix();
+
+    glColor3f(0.5, 0.5, 0.5);
+
+    // Antebraço esquerdo (na orientação do robô):
     glPushMatrix();
-    glTranslatef(0.0,0.0,0.28);
-    gluSphere(joelhoDireito, 0.08f, 26, 13);
+        
+        glTranslatef(l_troncoSuperior/2 + 0.05, h_troncoCompleto - 0.05, 0);
+
+        glRotatef(forearm_left_theta_up, 1, 0, 0);
+
+        glScalef(1.0, 1.0, forearm_r/0.1);
+
+        glTranslatef(0, 0, 0.05);
+
+        glutSolidCube(0.1);
+
+    glPopMatrix();
+
+    // Braço esquerdo (na orientação do robô):
     glPushMatrix();
-    glRotatef(rotacaoPerna, 1.0f, 0.0f, 0.0f);
-    gluCylinder(pernaDireita, 0.05f, 0.05f, 0.28f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0,0.0,0.28);
-    gluSphere(calcanharDireito, 0.05f, 26, 13);
-    glPushMatrix();
-    glRotatef(-90,1.0,0.0,0.0);
-    gluCylinder(peDireito, 0.05f, 0.03f, 0.2f, 26, 13);
-    glPushMatrix();
-    glTranslatef(0.0,0.0,.2);
-    gluSphere(tampaoDireito, 0.03f, 26, 13);
+        
+        glTranslatef(l_troncoSuperior/2 + 0.05, 
+                    h_troncoCompleto - 0.05 - forearm_r*(GLfloat)sin(rad(forearm_left_theta_up)), 
+                    forearm_r*(GLfloat)cos(rad(forearm_left_theta_up)));
+                    
+        glRotatef(forearm_left_theta_up-arm_left_theta_up, 1, 0, 0);
+
+        glScalef(1.0, 1.0, 4.0);
+
+        glTranslatef(0, 0, 0.05);
+
+        glColor3f(2, 2, 1);
+
+        glutSolidCube(0.1);
+
     glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    glPopMatrix();
-    
 }
-// Called to draw scene
+
 void RenderScene(void)
 {
-
-    GLUquadricObj *pObj; // Quadric Object
-
-    // Clear the window with current clearing color
+    GLUquadricObj *Ball;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Save the matrix state and do the rotations
     glPushMatrix();
 
-    // Move object back and do in place rotation
-    glTranslatef(0.0, -1.0, zoom);
-    glRotatef(yRot, 0.0, 1.0, 0.0);
-    glRotatef(xRot, 1.0, 0.0, 0.0);
-    glRotatef(zRot, 0.0, 0.0, 1.0);
+    glColor3f(0.5, 0.5, 0.5);
 
-    // Draw something
-    pObj = gluNewQuadric();
-    gluQuadricNormals(pObj, GLU_SMOOTH);
+    glTranslatef(0.0f, 0.0f, -5.0f);
 
-    DrawHead();
-    DrawBody();
-    DrawArms();
-    DrawLegs();
+    glRotatef(yRot, 0.0f, 1.0f, 0.0f);
+        
+    glRotatef(xRot, 1.0f, 0.0f, 0.0f);
 
-    // Restore the matrix state
+    // Tronco superior:
+    glPushMatrix();
+        
+        glScalef(1.0, 1.0, 0.5);
+
+        glTranslatef(0, 0.25 + 0.75*0.5, 0);
+
+        glutSolidCube(0.5);
+
     glPopMatrix();
 
-    // Buffer swap
+    // Tronco inferior (quadril):
+    glPushMatrix();
+
+        glTranslatef(0.0, (0.5*0.25)/2 + 0.75*0.5 - 0.5*0.25, 0);
+        
+        glScalef((0.5 * 0.75/2 - 0.05)/0.25, 0.25, 0.25);
+
+        glutSolidCube(0.5);
+
+    glPopMatrix();
+
+    DrawLegs();
+
+    // Cabeça:
+    glPushMatrix();
+
+        glTranslatef(0, h_troncoCompleto + 0.2*1.25/2, 0);
+
+        glScalef(0.5, 1.25, 0.5);
+
+        glutSolidCube(0.2);
+
+    glPopMatrix();
+
+    if(flag_up == 0){
+        DrawArms();
+        arm_right_theta_up = 0;
+        forearm_right_theta_up = -90;
+        arm_left_theta_up = 0;
+        forearm_left_theta_up = -90;
+        angulo_cosseno_arm_up = 0, angulo_cosseno_forarm_up = 0;
+    }
+    else DrawUpArms();
+    
+    glPopMatrix();
+
     glutSwapBuffers();
+
+    glutPostRedisplay();
+}
+
+void createLittleWall(GLfloat x, GLfloat y, GLfloat z, GLfloat theta, GLfloat l, GLfloat height, 
+    GLfloat depth){
+    
+    glPushMatrix();
+
+    glTranslatef(x, y, z);
+
+    glRotatef(theta, 0.0f, 1.0f, 0.0f);
+
+    glScalef(1.0f, height/l, depth/l);
+
+    glutSolidCube(l);
+
+    glPopMatrix();
+
+    return;
+}
+
+double rad(GLfloat theta){
+    return ((double) theta)*M_PI/180;
 }
 
 int main(int argc, char *argv[])
 {
-
+    // (1) Essa função inicial serve para que o OpenGL exercute os argumentos passados (argv) na hora da...
+    // ... execução:
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(800, 600);
-    glutCreateWindow("RoboArticulado");
-    glutReshapeFunc(ChangeSize);
-    glutKeyboardFunc(NormalKeys);
-    glutDisplayFunc(RenderScene);
-    SetupRC();
-    glutMainLoop();
 
+    // (2) Essa função define qual o modelo de janela a ser criado pelo OpenGL (note que são os bits do...
+    // resultado da expressão que irão dar todas as definições para a janela):
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+
+    // (3) Essa função define as dimensões da janela a ser gerada pelo OpenGL:
+    glutInitWindowSize(800, 600);
+
+    // (4) Essa função cria a janela com o nome passado como argumento:
+    glutCreateWindow("First OpenGL Code");
+
+    // (5) Essa função recebe como paramêtro o endereço de uma função ("ChangeSize" nesse caso) que lida...
+    // ... com o reajuste do tamanho da janela, assim sempre que a janela for reajustada tal função passada...
+    // ... como argumento irá ser executada:
+    glutReshapeFunc(ChangeSize);
+
+    // (6) Essa função recebe como parâmetro um função que recebe cada entrada do teclado com um char e lida...
+    // ... com esta entrada:
+    glutKeyboardFunc(keyboard);
+
+    // (6) Essa função recebe como paramêtro o endereço de uma função ("Spec ialKeys" nesse caso) que lida...
+    // ... com certas teclas assim sempre que tais teclas forem pressionadas tal função passada como argumento...
+    // ... irá ser executada:
+    glutSpecialFunc(SpecialKeys);
+
+    // (7) Essa função se encarrega de colocar os objetos no espaço (desenhá-los) e fazer as operações de...
+    // ... de translação, rotação e etc (manipulando a matriz de modelo):
+    glutDisplayFunc(RenderScene);
+
+    // (8) Esta função define os parâmetros de iluminação e a cor do fundo do espaço:
+    SetupRC();
+
+    glutMainLoop();
     return 0;
 }
