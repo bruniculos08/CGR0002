@@ -581,7 +581,7 @@ void RenderScene(void)
 
     glutSwapBuffers();
 
-    usleep(5000);
+    usleep(1000);
 
     glutPostRedisplay();
 }

@@ -1,0 +1,29 @@
+[
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "pygame",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pygame",
+        "description": "pygame",
+        "detail": "pygame",
+        "documentation": {}
+    },
+    {
+        "label": "SoftwareRender",
+        "kind": 6,
+        "importPath": "MatrizPerspectiva.main",
+        "description": "MatrizPerspectiva.main",
+        "peekOfCode": "class SoftwareRender:\n    def __init__(self) -> None:\n        pg.init()\n        self.RES = self.WIDTH, self.HEIGHT = 1920, 1080\n        self.FPS = 60\n        self.screen = pg.display.set_mode(self.RES)\n        self.clock = pg.time.Clock()\n    def draw(self) -> None:\n        self.screen.fill(pg.Color('darkslategray'))\n    def run(self):",
+        "detail": "MatrizPerspectiva.main",
+        "documentation": {}
+    }
+]
