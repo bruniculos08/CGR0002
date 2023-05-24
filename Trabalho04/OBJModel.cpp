@@ -15,6 +15,7 @@ OBJModel::~OBJModel(){
 
 void OBJModel::LoadFromFile(const char* fileName){
     std::vector<Position> vertices;    
+    std::vector<Texture> textures;    
     std::vector<Normal> normals;
 
     std::ifstream file(fileName);
@@ -32,6 +33,11 @@ void OBJModel::LoadFromFile(const char* fileName){
                 sscanf(line.c_str(), "v %f %f %f", &pos.x, &pos.y, &pos.z);
                 vertices.push_back(pos);
             }
+            if(StartWith(line, "vt")){
+                Texture tex;
+                sscanf(line.c_str(), "vt %f %f", &tex.x, &tex.y);
+                textures.push_back(tex);
+            }
             if(StartWith(line, "vn")){
                 Normal n;
                 sscanf(line.c_str(), "vn %f %f %f", &n.x, &n.y, &n.z);
@@ -41,10 +47,16 @@ void OBJModel::LoadFromFile(const char* fileName){
                 (void)sscanf(line.c_str(), "usemtl %s", currentMtlName, sizeof(currentMtlName));
             }
             if(StartWith(line, "f")){
-                int v1, v2, v3, v4;
-                int t1, t2, t3, t4;
-                int n1, n2, n3, n4;
-                (void)sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d", &v1, )
+                int v1, v2, v3;
+                int t1, t2, t3;
+                int n1, n2, n3;
+                // formato da linha de face f v/vt/vn:
+                (void)sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", 
+                            &v1, &t1, &n1, &v2, &t2, &n2, &v3, &t3, &n3);
+
+                AddVertexData(v1, t1, n1, currentMtlName, vertices, textures, normals);
+                AddVertexData(v2, t2, n2, currentMtlName, vertices, textures, normals);
+                AddVertexData(v3, t3, n3, currentMtlName, vertices, textures, normals);
             }
         }
     }
@@ -53,16 +65,21 @@ void OBJModel::LoadFromFile(const char* fileName){
     } 
 }
 
-std::vector<float> OBJModel::GetVertexData(){
-
+// Como Vertice é um retorno da função é vértice está definido dentro da classe OBJModel deve-se...
+// ... explicitar isso (o que não seria nessário caso houvesse Vertice em argumento da função...
+// ... visto que a função é de um item da classe OBJModel);
+std::vector<Vertice> OBJModel::GetVertexData(){
+    return mVertexData;
 }
 
 int OBJModel::GetVertexCount(){
-
+    return mVertexData.size();
 }
 
 void OBJModel::LoadMaterialFile(const char* fileName){
-    std::ifstream file(fileName);
+    // Gambiarra temporária
+    std::cout << "material fileName: " << fileName << std::endl;
+    std::ifstream file("Panela.mtl");
     if(file){
         std::string line;
         while(std::getline(file, line)){
@@ -96,8 +113,34 @@ bool OBJModel::StartWith(std::string& line, const char* text){
     return true;
 }
 
-void OBJModel::AddVertexData(int v1, int v2, int v3, int v4,
-                            const char *mt1, int n1, int n2, int n3, int n4,
-                            std::vector<Position>& vertices, std::vector<Normal>& normals){
+void OBJModel::AddVertexData(int vIndex, int tIndex, int nIndex,
+                            const char *mtl,
+                            std::vector<Position>& vertices, std::vector<Texture>& textures,
+                            std::vector<Normal>& normals){
+
+    Color c = mMaterialMap[mtl];
+    Position p = vertices[vIndex - 1];
+    Texture t = textures[tIndex - 1];
+    Normal n = normals[nIndex - 1];
+
+    Vertice newVertice;
+    newVertice.c = c;
+    newVertice.p = p;
+    newVertice.t = t;
+    newVertice.n = n;
+    mVertexData.push_back(newVertice);
+
+    // mVertexData.push_back(p.x);
+    // mVertexData.push_back(p.y);
+    // mVertexData.push_back(p.z);
+    // mVertexData.push_back(t.x);
+    // mVertexData.push_back(t.y);
+    // mVertexData.push_back(c.r);
+    // mVertexData.push_back(c.g);
+    // mVertexData.push_back(c.b);
+    // mVertexData.push_back(n.x);
+    // mVertexData.push_back(n.y);
+    // mVertexData.push_back(n.z);
+
 
 }
