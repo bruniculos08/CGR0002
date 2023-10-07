@@ -25,7 +25,7 @@ void OBJModel::LoadFromFile(const char* fileName){
         while(std::getline(file, line)){
             if(StartWith(line, "mtllib")){
                 char mtlFileName[100];
-                (void)sscanf(line.c_str(), "mtllib %s", mtlFileName, sizeof(mtlFileName));
+                (void)sscanf(line.c_str(), "mtllib %[^\n]%*c", mtlFileName, sizeof(mtlFileName));
                 LoadMaterialFile(mtlFileName);
             }
             if(StartWith(line, "v")){
@@ -79,7 +79,9 @@ int OBJModel::GetVertexCount(){
 void OBJModel::LoadMaterialFile(const char* fileName){
     // Gambiarra temporária
     std::cout << "material fileName: " << fileName << std::endl;
-    std::ifstream file("Panela.mtl");
+    // std::ifstream file("Panela.mtl");
+    // std::ifstream file("cube.mtl");
+    std::ifstream file(fileName);
     if(file){
         std::string line;
         while(std::getline(file, line)){

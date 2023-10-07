@@ -45,9 +45,6 @@ void loadTexture(const char* filename) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
-
-
 void ChangeSize(int w, int h)
 {
     // (1) Essa é a variável que será utlizada para armazer o aspect ratio (razão largura/altura) da...
@@ -134,13 +131,13 @@ void keyboard(unsigned char key, int x, int y){
         case 'D':
             // forearm_right_theta = forearm_right_theta + 5.0;
             // forearm_right_theta = (GLfloat) (((int) forearm_right_theta + 5) % 360);
-            glutPostRedisplay();
+            // glutPostRedisplay();
             break;
         case 'f':
         case 'F':
             // arm_right_theta = arm_right_theta + 5.0;
             // arm_right_theta = (GLfloat) (((int) arm_right_theta + 5) % 360);
-            glutPostRedisplay();
+            // glutPostRedisplay();
             break;
         default:
             break;
@@ -164,13 +161,12 @@ void SetupRC()
     // (5) Esta função define de qual lado cada polígo será renderizado, de modo que estando os vértices...
     // ... ordenados no sentido horário ou anti-horário, dependendo se a direção sobre a qual a luz pode chegar...
     // ... está no sentido escolhido, a face será renderizada ou não:
-    // glFrontFace(GL_CCW);
     glFrontFace(GL_CW);
+    // glFrontFace(GL_CCW);
 
     // (6) Esta função habilidade a não renderização das que estejam com os vértices sendo "visto" no sentido...
     // ... contrário ao escolhido:
     glEnable(GL_CULL_FACE);
-    // glEnable(GL_CULL_FACE);
 
     // (7) Esta função habilita a luz:
     glEnable(GL_LIGHTING);
@@ -212,7 +208,6 @@ void SetupRC()
 
 void RenderScene(void)
 {
-    GLUquadricObj *Ball;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     glPushMatrix();
@@ -225,6 +220,7 @@ void RenderScene(void)
         glBindTexture(GL_TEXTURE_2D, textureID);
         for(int i = 0; i < itemVerticesData.size() - 3; i = i + 3){
             glBegin(GL_POLYGON);
+            // glBegin(GL_TRIANGLES);
                 GLfloat n0[] = {itemVerticesData[i].n.x, itemVerticesData[i].n.y, itemVerticesData[i].n.z};
                 glNormal3fv(n0);
                 GLfloat p0[] = {itemVerticesData[i].p.x, itemVerticesData[i].p.y, itemVerticesData[i].p.z};
@@ -247,7 +243,7 @@ void RenderScene(void)
                 glTexCoord2fv(t2);
             glEnd();
         }
-        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
         glDisable(GL_TEXTURE_2D);
     
 
@@ -257,13 +253,15 @@ void RenderScene(void)
 
     // usleep(5000);
 
-    // glutPostRedisplay();
+    glutPostRedisplay();
 }
 
 int main(int argc, char *argv[])
 {
     // Carregando objeto:
     item.LoadFromFile("Panela (CGR).obj");
+    // item.LoadFromFile("Panela (CGR) not legacy.obj");
+    // item.LoadFromFile("cube.obj");
     itemVerticesData = item.GetVertexData();
 
     // (1) Essa função inicial serve para que o OpenGL exercute os argumentos passados (argv) na hora da...
@@ -303,6 +301,8 @@ int main(int argc, char *argv[])
 
     // Carregando textura:
     loadTexture("PanelaTextura.png");
+    // loadTexture("PanelaAlça1.png");
+    // loadTexture("cube.png");
 
     glutMainLoop();
     return 0;
